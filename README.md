@@ -23,7 +23,7 @@ You can extend the Model class easily. Just extend it!
 In case you were using the namespaces, you can set the models namespace in the query class by overriding the modelNamespace public method. This method should return a string ending with \
 
 ##Examples
-Please check /tests folder. Basically, the case1.php is the main file.
+Please check [tests/](/tests) folder. Basically, the case1.php is the main file.
 
 ```
 \
