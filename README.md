@@ -25,6 +25,7 @@ In case you were using the namespaces, you can set the models namespace in the q
 ##Examples
 Please check /tests folder. Basically, the case1.php is the main file.
 
+```
 \
 |
 +-- TestsIndexQuery (TestsIndexQuery.php)   Main index query class.
@@ -39,3 +40,4 @@ Please check /tests folder. Basically, the case1.php is the main file.
     +-- Foo (FooMode.php)                   Foo model class
     |
     +-- Bar (BarModel.php)                  Bar model class
+```
