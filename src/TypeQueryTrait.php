@@ -49,7 +49,7 @@ trait TypeQueryTrait {
      * Oerrides the parent class _find method to omit the type in parameters.
      * @see Query::_find for details.
      * 
-     * @param array $find
+     * @param mixed $id
      * @return Result|Model[]
      */
     protected function _find($id) {
