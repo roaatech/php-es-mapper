@@ -10,7 +10,7 @@ class TestsIndexQuery extends Query {
         return "tests";
     }
 
-    public function modelNamespace() {
+    public function modelClassNamePattern() {
         return "\\Models\\";
     }
 

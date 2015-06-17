@@ -9,7 +9,7 @@ class FooTypeQuery extends TestsIndexQuery implements TypeQueryInterface {
 
     use TypeQueryTrait;
 
-    public function modelClass() {
+    public function modelClassName() {
         return "Foo";
     }
 
