@@ -2,7 +2,7 @@
     "name": "itvisionsy/php-es-orm",
     "description": "A simple PHP ORM for elasticsearch",
     "replace": {
-        "itvisionsy/es-orm": "~1"
+        "itvisionsy/es-orm": ">=1"
     },
     "require": {
         "php": ">=5.4.0",
