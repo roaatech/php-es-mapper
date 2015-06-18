@@ -230,21 +230,31 @@ abstract class Query {
     }
 
     public static function __callStatic($name, $arguments) {
-        switch ($name) {
-            case 'query':
-            case 'all':
-            case 'find':
-                return call_user_func_array([static::make(), $name], $arguments);
+
+        if (array_search($name, static::_allowPublicAccess())!==false) {
+            //pass specific methods
+            return call_user_func_array([static::make(), $name], $arguments);
         }
+
+        if (strpos($name, 'get', 0) === 0) {
+            //pass getAll() as an internal query
+            return call_user_func_array([static::make(), $name], $arguments);
+        }
+
+        trigger_error("Call to undefined static method " . static::class . "::{$name}", E_USER_ERROR);
     }
 
     public function __call($name, $arguments) {
-        switch ($name) {
-            case 'query':
-            case 'all':
-            case 'find':
-                return call_user_func_array([$this, "_{$name}"], $arguments);
+        if (array_search($name, static::_allowPublicAccess())!==false) {
+            //pass specific methods
+            return call_user_func_array([$this, "_{$name}"], $arguments);
         }
+        if (strpos($name, 'get', 0) === 0) {
+            //pass getAll() as an internal query
+            $methodName = lcfirst(substr($name, 3));
+            return call_user_func_array([$this, "_{$methodName}"], $arguments);
+        }
+        trigger_error("Call to undefined method " . static::class . "::{$name}", E_USER_ERROR);
     }
 
     /**
@@ -257,6 +267,33 @@ abstract class Query {
             'hosts' => [
                 'http://localhost:9200/'
             ]
+        ];
+    }
+
+    /**
+     * Used to expose extra methods to the public static or public calls
+     * 
+     * Should return an array of strings.
+     * i.e.
+     * return ['any','top'];
+     * Will allow public static and public access to the two new methods:
+     * protected _any() and protected _top($rows)
+     * 
+     * Note that the protected methods should be prefixed with _
+     * 
+     * When overriding in sub classes use this form:
+     * protected _allowPublicAccess(){
+     *     return parent::_allowPublicAccess() + ['method1','method2',...];
+     * }
+     * This way you will save the allowed methods from the parent.
+     * 
+     * @return array
+     */
+    protected static function _allowPublicAccess() {
+        return [
+            'all',
+            'query',
+            'find'
         ];
     }
 
