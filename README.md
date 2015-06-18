@@ -18,6 +18,20 @@ That is simple:
  1. Use the methods: ::find($id), ::all(), and ::query(array $query=[]).
     You will get a list of Model objects the same way described above.
 
+## Adding extra methods
+You may need to add extra custom methods like top($numOfDocs) or anything else.
+To do so, you need to create the method name you wish as protected in the query sub-class. The name should be prefixed with _ (i.e. `_top`) then, you can either
+ * Call it prefixed with `get`, so to call the `_top(500)` method, just call `getTop(500)` and it will be mapped as public static and as public. 
+ * Override the _allowPublicAccess static protected method to add extra methods to expose. 
+    Please note that when overriding, don't forget to merge with the parent results not to lose the old ones:
+    ```PHP
+    protected _allowPublicAccess(){
+        return array_merge(parent::_allowPublicAccess(), ['top','any',...]);
+    }
+    ```
+
+    This way you will save the allowed methods from the parent.
+
 ### Extending the Model class
 You can extend the Model class easily. Just extend it!
 In case you were using the namespaces, you can set the models namespace in the query class by overriding the modelNamespace public method. This method should return a string ending with \

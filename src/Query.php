@@ -283,7 +283,7 @@ abstract class Query {
      * 
      * When overriding in sub classes use this form:
      * protected _allowPublicAccess(){
-     *     return parent::_allowPublicAccess() + ['method1','method2',...];
+     *     return array_merge(parent::_allowPublicAccess(), ['method',...,...]);
      * }
      * This way you will save the allowed methods from the parent.
      * 
