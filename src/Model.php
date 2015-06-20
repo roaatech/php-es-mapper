@@ -33,28 +33,14 @@ class Model implements ArrayAccess, Iterator {
     protected $esHitData;
 
     /**
-     * The id of the document.
-     * @var mixed
+     * Meta information about the model
+     * @var array contains the following (not always):
+     * @var mixed id The id of the document.
+     * @var string type The type of the document.
+     * @var string index The index of the document.
+     * @var float score The score of the hit.
      */
-    protected $id;
-
-    /**
-     * The type of the document.
-     * @var string
-     */
-    protected $type;
-
-    /**
-     * The index of the document.
-     * @var string
-     */
-    protected $index;
-
-    /**
-     * The score of the hit.
-     * @var float
-     */
-    protected $score;
+    protected $meta = [];
 
     /**
      * The data array from the raw
@@ -100,15 +86,16 @@ class Model implements ArrayAccess, Iterator {
      */
     public function __construct(array $esHit) {
         $this->esHitData = $esHit;
-        $this->id = $esHit['_id'];
-        $this->type = $esHit['_type'];
-        $this->index = $esHit['_index'];
-        $this->score = $esHit['_score'];
         $this->attributes = $esHit['_source'];
+        unset($esHit['_source']);
+        foreach ($esHit as $key => $value) {
+            $key = trim($key, "_");
+            $this->meta[$key] = $value;
+        }
     }
 
     public function __get($name) {
-        return array_key_exists($name, $this->attributes) ? $this->attributes[$name] : (property_exists($this, $name) ? $this->$name : null);
+        return $this->offsetExists($name) ? $this->attributes[$name] : (array_key_exists($name, $this->meta) ? $this->meta[$name] : (property_exists($this, $name) ? $this->$name : null));
     }
 
     public function __set($name, $value) {

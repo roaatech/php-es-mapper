@@ -21,10 +21,10 @@ require_once 'BarTypeQuery.php';
 require_once 'FooModel.php';
 require_once 'BarModel.php';
 
-function dump_me($id, $model) {
+function dump_me($id, $model, $extra = null) {
     if ($model) {
         $class = get_class($model);
-        echo "{$id} ({$class}): I am {$model->name}. My id is {$model->id}, and I am {$model['age']} years old!<br />";
+        echo "{$id} ({$class}): I am {$model->name}. My id is {$model->id}, and I am {$model['age']} years old! $extra<br />";
     } else {
         echo "{$id} (null): I am not there!<br />";
     }
@@ -76,5 +76,5 @@ foreach (\Tests\TestsIndexQuery::query(null, [
         ]
     ]
 ]) as $id => $model) {
-    dump_me($id, $model);
+    dump_me($id, $model, "My score is {$model->score}");
 }
