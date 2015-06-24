@@ -28,6 +28,7 @@ use Elasticsearch\Client;
  * 
  * @method Result query(string $type, array $parameters=[])
  * @method Result all(string $type)
+ * @method Result find(string $type, int|string|int[]|string $id)
  * @property-read Client $client
  */
 abstract class Query {
@@ -145,13 +146,19 @@ abstract class Query {
 
     /**
      * A decorator method to get specific document by its id.
+     * If the id is and array of strings or integers, 
+     * then multiple documents will be retreived by id.
      * 
      * @param string $type
-     * @param mixed $id
+     * @param mixed|string|integer|mixed[]|int[]|string[] $id
      * @return Model
      */
     protected function _find($type, $id) {
-        return $this->__find($this->index(), $type, $id);
+        if (is_array($id)) {
+            return $this->__mfind($this->index(), $type, $id);
+        } else {
+            return $this->__find($this->index(), $type, $id);
+        }
     }
 
     /**
@@ -199,6 +206,41 @@ abstract class Query {
     }
 
     /**
+     * The actual method to call client's mget method.
+     * Returns either a result of Model objects or null on failure.
+     * 
+     * @param string $index
+     * @param string $type
+     * @param sring[]|int[] $ids
+     * @return null|Model
+     */
+    protected function __mfind($index, $type, $ids) {
+        try {
+            $docs = $this->client->mget([
+                'index' => $index,
+                'type' => $type,
+                'body' => [
+                    "ids" => $ids
+                ]
+            ]);
+            $result = ['ids' => $ids, 'found' => [], 'missed' => [], 'docs' => []];
+            $missed = [] + $ids;
+            foreach ($docs['docs'] as $doc) {
+                if ($doc['found']) {
+                    $result['docs'][] = $doc;
+                    $result['found'][] = $doc['_id'];
+                    unset($missed[array_search($doc['_id'], $missed)]);
+                }
+            }
+            $result['missed'] = $missed;
+            return $this->_makeMultiGetResult($result);
+        } catch (\Exception $e) {
+            trigger_error($e->getMessage(), E_USER_WARNING);
+            return null;
+        }
+    }
+
+    /**
      * Creates a results set for ES query hits
      * 
      * @param array $result
@@ -206,6 +248,16 @@ abstract class Query {
      */
     protected function _makeResult(array $result) {
         return Result::make($result)->setModelClass($this->_fullModelClassNamePattern());
+    }
+
+    /**
+     * Creates a results set for ES query hits
+     * 
+     * @param array $result
+     * @return Result
+     */
+    protected function _makeMultiGetResult(array $result) {
+        return MultiGetResult::make($result)->setModelClass($this->_fullModelClassNamePattern());
     }
 
     /**
@@ -231,7 +283,7 @@ abstract class Query {
 
     public static function __callStatic($name, $arguments) {
 
-        if (array_search($name, static::_allowPublicAccess())!==false) {
+        if (array_search($name, static::_allowPublicAccess()) !== false) {
             //pass specific methods
             return call_user_func_array([static::make(), $name], $arguments);
         }
@@ -245,7 +297,7 @@ abstract class Query {
     }
 
     public function __call($name, $arguments) {
-        if (array_search($name, static::_allowPublicAccess())!==false) {
+        if (array_search($name, static::_allowPublicAccess()) !== false) {
             //pass specific methods
             return call_user_func_array([$this, "_{$name}"], $arguments);
         }
