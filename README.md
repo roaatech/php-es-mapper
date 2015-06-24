@@ -18,6 +18,11 @@ That is simple:
  1. Use the methods: ::find($id), ::all(), and ::query(array $query=[]).
     You will get a list of Model objects the same way described above.
 
+#### Please note
+Methods' parameters are mapped to original elasticsearch methods and parameters as follows:
+ * ::find(scalar) and ::find(array) methods are mapped to [get](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L167) and [mget](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L671) methods respectively.
+ * ::query method is mapped to the [search](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L1002) method, and the $query param will be passed as is after appending the index and type parameters to it.
+
 ## Adding extra methods
 You may need to add extra custom methods like top($numOfDocs) or anything else.
 To do so, you need to create the method name you wish as protected in the query sub-class. The name should be prefixed with _ (i.e. `_top`) then, you can either
@@ -55,3 +60,6 @@ Please check [tests/](/tests) folder. Basically, the case1.php is the main file.
     |
     +-- Bar (BarModel.php)                  Bar model class
 ```
+
+## License
+This code is published under [MIT](LICENSE) license.

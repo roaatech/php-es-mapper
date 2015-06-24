@@ -52,6 +52,22 @@ $id = 'zee1';
 $model = Tests\TestsIndexQuery::find('zee', $id);
 dump_me($id, $model);
 
+//find multiple models
+$ids = ['foo0', 'foo1', 'foo2', 'foo3', 'foo4'];
+$models = Tests\TestsIndexQuery::find('foo', $ids);
+echo "{$models->count()} documents found out of " . count($ids) . " total ids!<br />";
+foreach ($models as $id => $model) {
+    dump_me($id, $model, "I am found through mget method internally!");
+}
+
+//find multiple models
+$ids = ['foo0', 'foo1', 'foo2', 'foo3', 'foo4'];
+$models = Tests\FooTypeQuery::find($ids);
+echo "{$models->count()} documents found out of " . count($ids) . " total ids using the type query!<br />";
+foreach ($models as $id => $model) {
+    dump_me($id, $model, "I am found through mget method internally, but using the type query instead!!");
+}
+
 
 //get models by query of type
 foreach (\Tests\FooTypeQuery::query([
