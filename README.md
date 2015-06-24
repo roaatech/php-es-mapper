@@ -60,3 +60,6 @@ Please check [tests/](/tests) folder. Basically, the case1.php is the main file.
     |
     +-- Bar (BarModel.php)                  Bar model class
 ```
+
+## License
+This code is published under [MIT](LICENSE) license.
