@@ -221,7 +221,12 @@ class Result implements ArrayAccess, Iterator {
      * @return Model
      */
     public function first() {
-        return $this->offsetGet(0);
+        if ($this->offsetExists(0)) {
+            return $this->offsetGet(0);
+        } else {
+            trigger_error('Can not get null of empty result set', E_USER_WARNING);
+            return null;
+        }
     }
 
 }
