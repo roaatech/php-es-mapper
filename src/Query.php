@@ -345,8 +345,88 @@ abstract class Query {
         return [
             'all',
             'query',
-            'find'
+            'find',
+            'meta',
+            'metaSettings',
+            'metaAliases',
+            'metaMappings',
+            'metaWarmers'
         ];
+    }
+
+    /**
+     * Retreives the meta data of an index
+     * @param string|array $features a list of meta objects to fetch. null means 
+     *                     everything. Can be 
+     *                          * 1 string (i.e. '_settings'), 
+     *                          * csv (i.e. '_settings,_aliases'), 
+     *                          * array (i.e. ['_settings','_aliases']
+     * @param array $options can contain: 
+     *          ['ignore_unavailable']
+     *              (bool) Whether specified concrete indices should be ignored 
+     *              when unavailable (missing or closed)
+     *          ['allow_no_indices']
+     *              (bool) Whether to ignore if a wildcard indices expression 
+     *              resolves into no concrete indices. (This includes `_all` 
+     *              string or when no indices have been specified)
+     *          ['expand_wildcards'] 
+     *              (enum) Whether to expand wildcard expression to concrete 
+     *              indices that are open, closed or both.
+     *          ['local']
+     *              (bool) Return local information, do not retrieve the state 
+     *              from master node (default: false)
+     * @return array
+     */
+    protected function _meta($features = null, array $options = []) {
+        if ($features) {
+            $features = join(',', array_map(function($item) {
+                        return '_' . strtolower(trim($item, '_'));
+                    }, is_scalar($features) ? explode(",", $features) : $features));
+        }
+        $options = ['index' => $this->index()] + $options + ($features ? ['feature' => $features] : []);
+        $result = $this->client->indices()->get($options);
+        $result = array_pop($result);
+        return $result;
+    }
+
+    /**
+     * Retreives just the settings of the index
+     * @param array $options check _meta() for details
+     * @return array
+     */
+    protected function _metaSettings(array $options = []) {
+        $result = $this->_meta('_settings', $options);
+        return array_pop($result);
+    }
+
+    /**
+     * Retreives just the aliases of the index
+     * @param array $options check _meta() for details
+     * @return array
+     */
+    protected function _metaAliases(array $options = []) {
+        $result = $this->_meta('_aliases', $options);
+        return array_pop($result);
+    }
+
+    /**
+     * Retreives just the mappings of the index
+     * @param array $options check _meta() for details
+     * @return array
+     */
+    protected function _metaMappings(array $options = []) {
+        $result = $this->_meta('_mappings', $options);
+        return array_pop($result);
+    }
+
+    /**
+     * Retreives just the warmers of the index
+     * @param array $options check _meta() for details
+     * @return array
+     */
+    protected function _metaWarmers(array $options = []) {
+        $result = $this->_meta('_warmers', $options);
+        return array_pop($result);
     }
 
 }

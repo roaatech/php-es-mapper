@@ -123,4 +123,130 @@ abstract class Query {
         
     }
 
+    /**
+     * Retreives the meta data of an index
+     * @param string|array $features a list of meta objects to fetch. null means 
+     *                     everything. Can be 
+     *                          * 1 string (i.e. '_settings'), 
+     *                          * csv (i.e. '_settings,_aliases'), 
+     *                          * array (i.e. ['_settings','_aliases']
+     * @param array $options can contain: 
+     *          ['ignore_unavailable']
+     *              (bool) Whether specified concrete indices should be ignored 
+     *              when unavailable (missing or closed)
+     *          ['allow_no_indices']
+     *              (bool) Whether to ignore if a wildcard indices expression 
+     *              resolves into no concrete indices. (This includes `_all` 
+     *              string or when no indices have been specified)
+     *          ['expand_wildcards'] 
+     *              (enum) Whether to expand wildcard expression to concrete 
+     *              indices that are open, closed or both.
+     *          ['local']
+     *              (bool) Return local information, do not retrieve the state 
+     *              from master node (default: false)
+     * @return array
+     */
+    public function meta($feature = null, array $options = []) {
+        
+    }
+
+    /**
+     * Retreives the meta data of an index
+     * @param string|array $features a list of meta objects to fetch. null means 
+     *                     everything. Can be 
+     *                          * 1 string (i.e. '_settings'), 
+     *                          * csv (i.e. '_settings,_aliases'), 
+     *                          * array (i.e. ['_settings','_aliases']
+     * @param array $options can contain: 
+     *          ['ignore_unavailable']
+     *              (bool) Whether specified concrete indices should be ignored 
+     *              when unavailable (missing or closed)
+     *          ['allow_no_indices']
+     *              (bool) Whether to ignore if a wildcard indices expression 
+     *              resolves into no concrete indices. (This includes `_all` 
+     *              string or when no indices have been specified)
+     *          ['expand_wildcards'] 
+     *              (enum) Whether to expand wildcard expression to concrete 
+     *              indices that are open, closed or both.
+     *          ['local']
+     *              (bool) Return local information, do not retrieve the state 
+     *              from master node (default: false)
+     * @return array
+     */
+    public static function meta($feature = null, array $options = []) {
+        
+    }
+
+    /**
+     * Retreives just the settings of the index
+     * @param array $options check _meta() for details
+     * @return array
+     */
+    public function metaSettings(array $options = []) {
+        
+    }
+
+    /**
+     * Retreives just the settings of the index
+     * @param array $options check _meta() for details
+     * @return array
+     */
+    public static function metaSettings(array $options = []) {
+        
+    }
+
+    /**
+     * Retreives just the aliases of the index
+     * @param array $options check _meta() for details
+     * @return array
+     */
+    public function metaAliases(array $options = []) {
+        
+    }
+
+    /**
+     * Retreives just the aliases of the index
+     * @param array $options check _meta() for details
+     * @return array
+     */
+    public static function metaAliases(array $options = []) {
+        
+    }
+
+    /**
+     * Retreives just the warmers of the index
+     * @param array $options check _meta() for details
+     * @return array
+     */
+    public function metaWarmers(array $options = []) {
+        
+    }
+
+    /**
+     * Retreives just the warmers of the index
+     * @param array $options check _meta() for details
+     * @return array
+     */
+    public static function metaWarmers(array $options = []) {
+        
+    }
+
+    /**
+     * Retreives just the mappings of the index
+     * @param array $options check _meta() for details
+     * @return array
+     */
+    public function metaMappings(array $options = []) {
+        
+    }
+
+    /**
+     * Retreives just the mappings of the index
+     * @param array $options check _meta() for details
+     * @return array
+     */
+    public static function metaMappings(array $options = []) {
+        
+    }
+
 }
