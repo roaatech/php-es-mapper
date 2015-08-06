@@ -41,6 +41,20 @@ To do so, you need to create the method name you wish as protected in the query 
 You can extend the Model class easily. Just extend it!
 In case you were using the namespaces, you can set the models namespace in the query class by overriding the modelNamespace public method. This method should return a string ending with \
 
+##Retrieving results
+The returned result set implements the ArrayAccess interface to access specific document inside the result. i.e.
+```PHP
+$result = SomeQuery::all();
+```
+You can then get a document like this:
+```PHP
+$doc = $result[1]; //gets the second document
+```
+Or you can use the dot notation like that:
+```
+$result->fetch('hits.hits.0'); //for any absolute access
+```
+
 ##Examples
 Please check [tests/](/tests) folder. Basically, the case1.php is the main file.
 
