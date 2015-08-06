@@ -229,4 +229,28 @@ class Result implements ArrayAccess, Iterator {
         }
     }
 
+    /**
+     * Gets specific value from within the result set using dot notation
+     * 
+     * The path should be absolution from the beginning, and include the normal 
+     * elastic search structure depending on the query type
+     * 
+     * @param string $path
+     */
+    public function fetch($path) {
+        $result = $this->result;
+        $keys = explode(".", $path);
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $result)) {
+                return null;
+            }
+            $result = $result[$key];
+        }
+        return $result;
+    }
+
+    public function __get($name) {
+        return $this->fetch($name);
+    }
+
 }
