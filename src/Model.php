@@ -86,8 +86,9 @@ class Model implements ArrayAccess, Iterator {
      */
     public function __construct(array $esHit) {
         $this->esHitData = $esHit;
-        $this->attributes = $esHit['_source'];
-        unset($esHit['_source']);
+        $source = array_key_exists("_source", $esHit) ? "_source" : "fields";
+        $this->attributes = $esHit[$source];
+        unset($esHit[$source]);
         foreach ($esHit as $key => $value) {
             $key = trim($key, "_");
             $this->meta[$key] = $value;
