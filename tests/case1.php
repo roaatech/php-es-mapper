@@ -9,8 +9,9 @@
  *          - foo1: {name: Fooa, id: 1, age: 33, alive: true}
  *          - foo2: {name: Foob, id: 2, age: 18, alive: false}
  *      - bar
- *          - bar1: {name: 
- *          - bar2
+ *          - bar1: {name: Bara, id: 1, age: 33, alive: true}
+ *          - bar2: {name: Barb, id: 2, age: 77, alive: false}
+ *          - bar3: {name: Barc, id: 3, age: 12, alive: false}
  */
 
 require '../vendor/autoload.php';

@@ -162,6 +162,20 @@ abstract class Query {
     }
 
     /**
+     * Add fixed query part to the called query
+     * 
+     * To add a fixed per-class condition. I.e. specific flag to be set to 
+     * specific value.
+     * 
+     * Note that this is to be called for the query (not find) calls only.
+     * 
+     * @return array The query part to be merged into the original part.
+     */
+    protected function additionalQuery() {
+        return [];
+    }
+
+    /**
      * The actual method to call client's search method.
      * Returns Result object
      * 
@@ -173,7 +187,7 @@ abstract class Query {
     protected function __query($index, $type = null, array $query = []) {
         $result = $this->client->search([
             'index' => $index,
-            'body' => $query
+            'body' => array_merge($query, $this->additionalQuery())
                 ] + ($type ? ['type' => $type] : []));
         return $this->_makeResult($result);
     }
