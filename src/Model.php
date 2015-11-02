@@ -14,6 +14,9 @@
 
 namespace ItvisionSy\EsMapper;
 
+use ArrayAccess;
+use Iterator;
+
 /**
  * A document model class returned from ES find/query methods
  *
@@ -21,7 +24,7 @@ namespace ItvisionSy\EsMapper;
  * @author Muhannad Shelleh <muhannad.shelleh@itvision-sy.com>
  * 
  */
-class Model implements IModel {
+class Model implements IModel, ArrayAccess, Iterator {
 
     /**
      * The raw hit element array returned from ES
@@ -125,7 +128,7 @@ class Model implements IModel {
      * 
      * @param string $offset
      * @param mixed $value
-     * @return \ItvisionSy\EsMapper\Model
+     * @return Model
      */
     public function offsetSet($offset, $value) {
         $this->attributes[$offset] = $value;
@@ -135,7 +138,7 @@ class Model implements IModel {
     /**
      * 
      * @param type $offset
-     * @return \ItvisionSy\EsMapper\Model
+     * @return Model
      */
     public function offsetUnset($offset) {
         unset($this->attributes[$offset]);
