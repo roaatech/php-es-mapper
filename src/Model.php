@@ -14,9 +14,6 @@
 
 namespace ItvisionSy\EsMapper;
 
-use ArrayAccess;
-use Iterator;
-
 /**
  * A document model class returned from ES find/query methods
  *
@@ -24,7 +21,7 @@ use Iterator;
  * @author Muhannad Shelleh <muhannad.shelleh@itvision-sy.com>
  * 
  */
-class Model implements ArrayAccess, Iterator {
+class Model implements IModel {
 
     /**
      * The raw hit element array returned from ES
