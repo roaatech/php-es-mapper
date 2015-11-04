@@ -1,6 +1,11 @@
 #ElasticSearch Mapper (es-mapper)
 This is a simple ORM mapper for ElasticSearch on PHP.
 
+#Installation
+##Composer
+```composer require itvisionsy/php-es-orm```
+please note it requires Elasticsearch PHP SDK v>=1 and <2
+
 ##How to use?
 That is simple:
 
