@@ -29,6 +29,20 @@ Methods' parameters are mapped to original elasticsearch methods and parameters 
  * `::find(scalar)` and `::find(scalar[])` methods are mapped to [get](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L167) and [mget](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L671) methods respectively.
  * `::query` method is mapped to the [search](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L1002) method, and the $query param will be passed as is after appending the index and type parameters to it.
 
+##Retrieving results
+The returned result set implements the ArrayAccess interface to access specific document inside the result. i.e.
+```PHP
+$result = SomeQuery::all();
+```
+You can then get a document like this:
+```PHP
+$doc = $result[1]; //gets the second document
+```
+Or you can use the dot notation like that:
+```
+$result->fetch('hits.hits.0'); //for any absolute access
+```
+
 ##Creating new documents
 Either way will work:
  1. Use the index query static method
@@ -73,20 +87,6 @@ To do so, you need to create the method name you wish as protected in the query 
 You can extend the Model class easily. Just extend it!
 In case you were using the namespaces, you can set the models namespace in the query class by overriding the modelNamespace public method. This method should return a string ending with \
 After that, you need to call the `->setModelClass($class)` on the query result object.
-
-##Retrieving results
-The returned result set implements the ArrayAccess interface to access specific document inside the result. i.e.
-```PHP
-$result = SomeQuery::all();
-```
-You can then get a document like this:
-```PHP
-$doc = $result[1]; //gets the second document
-```
-Or you can use the dot notation like that:
-```
-$result->fetch('hits.hits.0'); //for any absolute access
-```
 
 ##Examples
 Please check [tests/](/tests) folder. Basically, the case1.php is the main file.
