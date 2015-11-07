@@ -1,9 +1,10 @@
 #ElasticSearch Mapper (es-mapper)
 This is a simple ORM mapper for ElasticSearch on PHP.
 
-#Installation
-##Composer
+##Installation
+###Composer
 ```composer require itvisionsy/php-es-orm```
+
 please note it requires Elasticsearch PHP SDK v>=1 and <2
 
 ##How to use?
@@ -28,6 +29,46 @@ Methods' parameters are mapped to original elasticsearch methods and parameters 
  * `::find(scalar)` and `::find(scalar[])` methods are mapped to [get](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L167) and [mget](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L671) methods respectively.
  * `::query` method is mapped to the [search](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L1002) method, and the $query param will be passed as is after appending the index and type parameters to it.
 
+##Retrieving results
+The returned result set implements the ArrayAccess interface to access specific document inside the result. i.e.
+```PHP
+$result = SomeQuery::all();
+```
+You can then get a document like this:
+```PHP
+$doc = $result[1]; //gets the second document
+```
+Or you can use the dot notation like that:
+```
+$result->fetch('hits.hits.0'); //for any absolute access
+```
+
+##Creating new documents
+Either way will work:
+ 1. Use the index query static method
+    ```php
+    IndexQuery::create(array $data, $type, $id=null, array $parameters=[])
+    ```
+    
+ 1. Use the type query static method:
+   ```php
+   TypeQuery::create(array $data, $id=null, array $parameters=[])
+   ```
+
+##Updating a document
+You can update an already indexed document by:
+ 1. Either *Re-indexing* a document with the same type and id, OR
+ 1. Or `update(array $data, array $parameters=[])` method on the model's object:
+   
+   ```php
+   TypeQuery::find(1)->update(['new_key'=>'value','old_key'=>'new value'],[]);
+   ```
+
+##Deleting a document
+The same way you can update a document, you can delete it:
+ 1. Calling the static method `::delete($type, $id)` on the index query
+ 1. Calling the method `->delete()` on model's object.
+
 ## Adding extra methods
 You may need to add extra custom methods like `top($numOfDocs)` or anything else.
 To do so, you need to create the method name you wish as protected in the query sub-class. The name should be prefixed with _ (i.e. `_top`) then, you can either
@@ -46,20 +87,6 @@ To do so, you need to create the method name you wish as protected in the query 
 You can extend the Model class easily. Just extend it!
 In case you were using the namespaces, you can set the models namespace in the query class by overriding the modelNamespace public method. This method should return a string ending with \
 After that, you need to call the `->setModelClass($class)` on the query result object.
-
-##Retrieving results
-The returned result set implements the ArrayAccess interface to access specific document inside the result. i.e.
-```PHP
-$result = SomeQuery::all();
-```
-You can then get a document like this:
-```PHP
-$doc = $result[1]; //gets the second document
-```
-Or you can use the dot notation like that:
-```
-$result->fetch('hits.hits.0'); //for any absolute access
-```
 
 ##Examples
 Please check [tests/](/tests) folder. Basically, the case1.php is the main file.

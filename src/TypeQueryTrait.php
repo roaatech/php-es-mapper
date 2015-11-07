@@ -35,7 +35,7 @@ trait TypeQueryTrait {
     }
 
     /**
-     * Oerrides the parent class _query method to omit the type in parameters.
+     * Overrides the parent class _query method to omit the type in parameters.
      * @see Query::_query for details.
      * 
      * @param array $query
@@ -46,7 +46,7 @@ trait TypeQueryTrait {
     }
 
     /**
-     * Oerrides the parent class _find method to omit the type in parameters.
+     * Overrides the parent class _find method to omit the type in parameters.
      * @see Query::_find for details.
      * 
      * @param mixed $id
@@ -54,6 +54,17 @@ trait TypeQueryTrait {
      */
     protected function _find($id) {
         return parent::_find($this->type(), $id);
+    }
+
+    /**
+     * Overrides the parent class _create method to omit the type in parameters.
+     * @see Query::_create for details.
+     * 
+     * @param mixed $id
+     * @return Result|Model[]
+     */
+    protected function _create(array $data, $id = null, array $parameters = []) {
+        return parent::_create($data, $this->type(), $id, $parameters);
     }
 
     /**
@@ -78,7 +89,7 @@ trait TypeQueryTrait {
     }
 
     /**
-     * Oerrides the parent class _makeResult method to pass the correct model
+     * Overrides the parent class _makeResult method to pass the correct model
      * class name.
      * @see Query::_makeResult for details.
      * 
@@ -86,11 +97,11 @@ trait TypeQueryTrait {
      * @return Result|Model[]
      */
     protected function _makeResult(array $result) {
-        return Result::make($result)->setModelClass($this->_fullModelClass());
+        return Result::make($result, $this->getClient())->setModelClass($this->_fullModelClass());
     }
 
     /**
-     * Oerrides the parent class _makeModel method to pass the correct model
+     * Overrides the parent class _makeModel method to pass the correct model
      * class name.
      * @see Query::_makeModel for details.
      * 
@@ -98,7 +109,7 @@ trait TypeQueryTrait {
      * @return Model
      */
     protected function _makeModel(array $source) {
-        return Model::makeOfType($source, $this->_fullModelClass());
+        return Model::makeOfType($source, $this->_fullModelClass(), $this->getClient());
     }
 
 }

@@ -14,12 +14,18 @@ class ZeeTypeQuery extends TestsIndexQuery implements TypeQueryInterface {
     }
 
     public function type() {
-        return "foo";
+        return "zee";
     }
 
     protected function additionalQuery() {
         return [
-            'term' => ['alive' => false]
+            'query' => [
+                'filtered' => [
+                    'filter' => [
+                        'term' => ['alive' => false]
+                    ]
+                ]
+            ]
         ];
     }
 

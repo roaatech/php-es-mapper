@@ -18,6 +18,7 @@ use ArrayAccess;
 use Iterator;
 use ItvisionSy\EsMapper\Model;
 use ItvisionSy\EsMapper\Result;
+use Elasticsearch\Client;
 
 /**
  * A result-array container to manage mapping elements into correct model 
@@ -33,6 +34,12 @@ class Result implements ArrayAccess, Iterator {
      * @var array
      */
     protected $result;
+
+    /**
+     * The es client object
+     * @var Client
+     */
+    protected $esClient;
 
     /**
      * Current element index for current/valid/next/... operations
@@ -58,19 +65,22 @@ class Result implements ArrayAccess, Iterator {
      * Factory method to create the result object
      * 
      * @param array $result
+     * @param Client $esClient
      * @return Result
      */
-    public static function make(array $result) {
-        return new static($result);
+    public static function make(array $result, Client $esClient = null) {
+        return new static($result, $esClient);
     }
 
     /**
      * Constructor method to create the result object
      * 
      * @param array $result
+     * @param Client $esClient
      */
-    public function __construct(array $result) {
+    public function __construct(array $result, Client $esClient = null) {
         $this->result = $result;
+        $this->esClient = $esClient;
     }
 
     /**
@@ -198,7 +208,7 @@ class Result implements ArrayAccess, Iterator {
      * @return Model
      */
     public function offsetGet($offset) {
-        return Model::makeOfType($this->result['hits']['hits'][$offset], $this->modelClass);
+        return Model::makeOfType($this->result['hits']['hits'][$offset], $this->modelClass, $this->esClient);
     }
 
     /**

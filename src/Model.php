@@ -15,6 +15,8 @@
 namespace ItvisionSy\EsMapper;
 
 use ArrayAccess;
+use Elasticsearch\Client;
+use Exception;
 use Iterator;
 
 /**
@@ -31,6 +33,12 @@ class Model implements IModel, ArrayAccess, Iterator {
      * @var array
      */
     protected $esHitData;
+
+    /**
+     * The es client object
+     * @var Client
+     */
+    protected $esClient;
 
     /**
      * Meta information about the model
@@ -54,38 +62,42 @@ class Model implements IModel, ArrayAccess, Iterator {
      * 
      * @param array $esHit
      * @param string $className a class name or pattern.
+     * @param Client $esClient ElasticSearch client
      * @return Model
      */
-    public static function MakeOfType(array $esHit, $className = "") {
+    public static function MakeOfType(array $esHit, $className = "", Client $esClient = null) {
         if ($className && strpos($className, '{type}') !== false) {
             $baseClassName = str_replace(' ', '', ucwords(preg_replace('/[^a-zA-Z0-9]+/', ' ', $esHit['_type'])));
             $fullClassName = str_replace("{type}", $baseClassName, $className);
             if (!class_exists($fullClassName)) {
-                $fullClassName = static::class;
+                $fullClassName = array_key_exists('_source', $esHit) ? static::class : ArrayObject::class;
             }
         } else {
             $fullClassName = $className? : static::class;
         }
-        return $fullClassName::make($esHit);
+        return $fullClassName::make($esHit, $esClient);
     }
 
     /**
      * A factory method to create a new class object for the provided hit data.
      * 
      * @param array $esHit
+     * @param Client $esClient ElasticSearch client
      * @return Model
      */
-    public static function make(array $esHit) {
-        return new static($esHit);
+    public static function make(array $esHit, Client $esClient = null) {
+        return new static($esHit, $esClient);
     }
 
     /**
      * Constructor method
      * 
      * @param array $esHit
+     * @param Client $esClient ElasticSearch client
      */
-    public function __construct(array $esHit) {
+    public function __construct(array $esHit, Client $esClient = null) {
         $this->esHitData = $esHit;
+        $this->esClient = $esClient;
         $source = array_key_exists("_source", $esHit) ? "_source" : "fields";
         $this->attributes = $esHit[$source];
         unset($esHit[$source]);
@@ -133,6 +145,105 @@ class Model implements IModel, ArrayAccess, Iterator {
     public function offsetSet($offset, $value) {
         $this->attributes[$offset] = $value;
         return $this;
+    }
+
+    public function canAlter() {
+        if (!array_key_exists('id', $this->meta)) {
+            return false;
+        }
+        if (!array_key_exists('type', $this->meta)) {
+            return false;
+        }
+        if (!array_key_exists('index', $this->meta)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Sets elasticsearch client
+     * @param Client $esClient
+     */
+    public function setElasticClient(Client $esClient) {
+        $this->esClient = $esClient;
+    }
+
+    /**
+     * Returns elastic hit data (the original data provided).
+     * 
+     * @return array
+     */
+    public function getEsHitData() {
+        return $this->esHitData;
+    }
+
+    /**
+     * Return attributes (actual document data)
+     * @return array
+     */
+    public function getAttributes() {
+        return $this->attributes;
+    }
+
+    /**
+     * Return meta data
+     * @return array
+     */
+    public function getMeta() {
+        return $this->meta;
+    }
+
+    /**
+     * ElasticSearch Client
+     * @return Client|null
+     */
+    public function getElasticClient() {
+        return $this->esClient;
+    }
+
+    /**
+     * Updates the document
+     * 
+     * @param array $data the normal elastic update parameters to be used
+     * @param array $parameters the parameters array
+     * @return array
+     * @throws Exception
+     */
+    public function update(array $data, array $parameters = []) {
+        if (!$this->canAlter()) {
+            throw new Exception('Need index, type, and key to update a document');
+        }
+        if (!$this->esClient) {
+            throw new Exception('Need ElasticSearch client object to ALTER operations');
+        }
+        $params = [
+            'index' => $this->meta['index'],
+            'type' => $this->meta['type'],
+            'id' => $this->meta['id'],
+            'body' => $data] + $parameters;
+        return $this->esClient->update($params);
+    }
+
+    /**
+     * Deletes a document
+     * 
+     * @param array $parameters
+     * @return array
+     * @throws Exception
+     */
+    public function delete(array $parameters = []) {
+        if (!$this->canAlter()) {
+            throw new Exception('Need index, type, and key to update a document');
+        }
+        if (!$this->esClient) {
+            throw new Exception('Need ElasticSearch client object to ALTER operations');
+        }
+        $params = [
+            'index' => $this->meta['index'],
+            'type' => $this->meta['type'],
+            'id' => $this->meta['id']] + $parameters;
+        $result = $this->esClient->delete($params);
+        return $result;
     }
 
     /**
