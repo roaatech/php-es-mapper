@@ -30,17 +30,25 @@ Methods' parameters are mapped to original elasticsearch methods and parameters 
  * `::query` method is mapped to the [search](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L1002) method, and the $query param will be passed as is after appending the index and type parameters to it.
 
 ##Creating new documents
-You can create a new document by calling the create method in different contexts similar to other retrieve methods.
- 1. ```IndexQuery::create(array $data, $type, $id=null, array $parameters=[])```
- 1. ```TypeQuery::create(array $data, $id=null, array $parameters=[])```
+Either way will work:
+ 1. Use the index query static method
+    ```php
+    IndexQuery::create(array $data, $type, $id=null, array $parameters=[])
+    ```
+    
+ 1. Use the type query static method:
+   ```php
+   TypeQuery::create(array $data, $id=null, array $parameters=[])
+   ```
 
 ##Updating a document
 You can update an already indexed document by:
  1. Either *Re-indexing* a document with the same type and id, OR
  1. Or `update(array $data, array $parameters=[])` method on the model's object:
-    ```PHP
-    TypeQuery::find(1)->update(['new_key'=>'value','old_key'=>'new value'],[]);
-    ```
+   
+   ```php
+   TypeQuery::find(1)->update(['new_key'=>'value','old_key'=>'new value'],[]);
+   ```
 
 ##Deleting a document
 The same way you can update a document, you can delete it:
