@@ -93,5 +93,6 @@ foreach (\Tests\TestsIndexQuery::query(null, [
         ]
     ]
 ]) as $id => $model) {
-    dump_me($id, $model, "My score is {$model->score}");
+    dump_me($id, $model, "My score is {$model->score} and I am " . ($model->alive ? "alive" : "dead"));
+    $model->update(['doc' => ['alive' => !$model->alive] + $model->attributes]);
 }

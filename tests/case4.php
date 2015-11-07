@@ -17,8 +17,8 @@
 require '../vendor/autoload.php';
 
 require_once 'TestsIndexQuery.php';
-require_once 'ZeeTypeQuery.php';
-require_once 'ZeeModel.php';
+require_once 'BarTypeQuery.php';
+require_once 'BarModel.php';
 
 function dump_me($id, $model, $extra = null) {
     if ($model) {
@@ -30,7 +30,5 @@ function dump_me($id, $model, $extra = null) {
 }
 
 //get all of type
-foreach (Tests\ZeeTypeQuery::all() as $id => $model) {
-    /* @var $model Models\Zee */
-    dump_me($id, $model, "I am " . ($model->alive ? "alive" : "dead"));
-}
+var_dump(\Tests\BarTypeQuery::create(['name' => 'Bard', 'id' => 4, 'age' => 8, 'alive' => true], 'zee4'));
+var_dump(\Tests\BarTypeQuery::all()->data());

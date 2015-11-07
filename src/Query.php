@@ -162,6 +162,37 @@ abstract class Query {
     }
 
     /**
+     * Index a new document
+     * 
+     * @param array $data the document data
+     * @param string $type
+     * @param string|number $id
+     * @param array $parameters
+     * @return type
+     */
+    protected function _create(array $data, $type, $id = null, array $parameters = []) {
+        return $this->__create($data, $this->index(), $type, $id, $parameters);
+    }
+
+    /**
+     * Index a new document
+     * 
+     * @param array $data the document data
+     * @param string $index
+     * @param string $type
+     * @param string|number $id
+     * @param array $parameters
+     * @return type
+     */
+    protected function __create(array $data, $index, $type, $id = null, array $parameters = []) {
+        $result = $this->client->index([
+            'index' => $index,
+            'type' => $type,
+            'body' => $data] + ($id ? ['id' => $id] : []) + $parameters);
+        return $result;
+    }
+
+    /**
      * Add fixed query part to the called query
      * 
      * To add a fixed per-class condition. I.e. specific flag to be set to 
@@ -187,7 +218,7 @@ abstract class Query {
     protected function __query($index, $type = null, array $query = []) {
         $result = $this->client->search([
             'index' => $index,
-            'body' => array_merge($query, $this->additionalQuery())
+            'body' => array_merge_recursive($query, $this->additionalQuery())
                 ] + ($type ? ['type' => $type] : []));
         return $this->_makeResult($result);
     }
@@ -261,7 +292,7 @@ abstract class Query {
      * @return Result
      */
     protected function _makeResult(array $result) {
-        return Result::make($result)->setModelClass($this->_fullModelClassNamePattern());
+        return Result::make($result, $this->getClient())->setModelClass($this->_fullModelClassNamePattern());
     }
 
     /**
@@ -271,7 +302,7 @@ abstract class Query {
      * @return Result
      */
     protected function _makeMultiGetResult(array $result) {
-        return MultiGetResult::make($result)->setModelClass($this->_fullModelClassNamePattern());
+        return MultiGetResult::make($result, $this->getClient())->setModelClass($this->_fullModelClassNamePattern());
     }
 
     /**
@@ -281,7 +312,7 @@ abstract class Query {
      * @return Model
      */
     protected function _makeModel(array $source) {
-        return Model::makeOfType($source, $this->_fullModelClassNamePattern());
+        return Model::MakeOfType($source, $this->_fullModelClassNamePattern(), $this->getClient());
     }
 
     /**
@@ -361,6 +392,7 @@ abstract class Query {
             'query',
             'find',
             'meta',
+            'create',
             'metaSettings',
             'metaAliases',
             'metaMappings',
