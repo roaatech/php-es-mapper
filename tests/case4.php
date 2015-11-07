@@ -31,4 +31,5 @@ function dump_me($id, $model, $extra = null) {
 
 //get all of type
 var_dump(\Tests\BarTypeQuery::create(['name' => 'Bard', 'id' => 4, 'age' => 8, 'alive' => true], 'zee4'));
+var_dump(\Tests\TestsIndexQuery::create(['name' => 'Bard', 'id' => 4, 'age' => 8, 'alive' => true], 'bar', 'bar4'));
 var_dump(\Tests\BarTypeQuery::all()->data());

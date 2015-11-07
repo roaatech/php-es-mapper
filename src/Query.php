@@ -168,7 +168,7 @@ abstract class Query {
      * @param string $type
      * @param string|number $id
      * @param array $parameters
-     * @return type
+     * @return array
      */
     protected function _create(array $data, $type, $id = null, array $parameters = []) {
         return $this->__create($data, $this->index(), $type, $id, $parameters);
@@ -182,13 +182,42 @@ abstract class Query {
      * @param string $type
      * @param string|number $id
      * @param array $parameters
-     * @return type
+     * @return array
      */
     protected function __create(array $data, $index, $type, $id = null, array $parameters = []) {
         $result = $this->client->index([
             'index' => $index,
             'type' => $type,
             'body' => $data] + ($id ? ['id' => $id] : []) + $parameters);
+        return $result;
+    }
+
+    /**
+     * Deletes a document
+     * 
+     * @param string $type
+     * @param string|number $id
+     * @param array $parameters
+     * @return array
+     */
+    protected function _delete($type, $id = null, array $parameters = []) {
+        return $this->__delete($this->index(), $type, $id, $parameters);
+    }
+
+    /**
+     * Deletes a document
+     * 
+     * @param string $index
+     * @param string $type
+     * @param string|number $id
+     * @param array $parameters
+     * @return array
+     */
+    protected function __delete($index, $type, $id, array $parameters = []) {
+        $result = $this->client->delete([
+            'index' => $index,
+            'type' => $type,
+            'id' => $id] + $parameters);
         return $result;
     }
 
@@ -393,6 +422,7 @@ abstract class Query {
             'find',
             'meta',
             'create',
+            'delete',
             'metaSettings',
             'metaAliases',
             'metaMappings',

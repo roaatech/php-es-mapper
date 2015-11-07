@@ -206,7 +206,7 @@ class Model implements IModel, ArrayAccess, Iterator {
      * 
      * @param array $data the normal elastic update parameters to be used
      * @param array $parameters the parameters array
-     * @return result
+     * @return array
      * @throws Exception
      */
     public function update(array $data, array $parameters = []) {
@@ -221,15 +221,14 @@ class Model implements IModel, ArrayAccess, Iterator {
             'type' => $this->meta['type'],
             'id' => $this->meta['id'],
             'body' => $data] + $parameters;
-        $result = $this->esClient->update($params);
-        return $result;
+        return $this->esClient->update($params);
     }
 
     /**
      * Deletes a document
      * 
      * @param array $parameters
-     * @return type
+     * @return array
      * @throws Exception
      */
     public function delete(array $parameters = []) {
