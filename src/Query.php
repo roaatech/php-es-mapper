@@ -14,6 +14,7 @@
 
 namespace ItvisionSy\EsMapper;
 
+use Exception;
 use Elasticsearch\Client;
 
 /**
@@ -185,10 +186,15 @@ abstract class Query {
      * @return array
      */
     protected function __create(array $data, $index, $type, $id = null, array $parameters = []) {
-        $result = $this->client->index([
+        $result = $this->client->create([
             'index' => $index,
             'type' => $type,
             'body' => $data] + ($id ? ['id' => $id] : []) + $parameters);
+        if ($result['_shards']['failed'] > 0) {
+            throw new Exception('Failed to create the document. Serialized results: ' + json_encode($result));
+        } else {
+            $result = $this->__find($result['_index'], $result['_type'], $result['_id']);
+        }
         return $result;
     }
 
@@ -359,12 +365,12 @@ abstract class Query {
 
         if (array_search($name, static::_allowPublicAccess()) !== false) {
             //pass specific methods
-            return call_user_func_array([static::make(), $name], $arguments);
+            return call_user_func_array([new static(), $name], $arguments);
         }
 
         if (strpos($name, 'get', 0) === 0) {
             //pass getAll() as an internal query
-            return call_user_func_array([static::make(), $name], $arguments);
+            return call_user_func_array([new static(), $name], $arguments);
         }
 
         trigger_error("Call to undefined static method " . static::class . "::{$name}", E_USER_ERROR);
