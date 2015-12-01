@@ -254,7 +254,7 @@ abstract class Query {
         $result = $this->client->search([
             'index' => $index,
             'body' => array_merge_recursive($query, $this->additionalQuery())
-                ] + ($type ? ['type' => $type] : []));
+            ] + ($type ? ['type' => $type] : []));
         return $this->_makeResult($result);
     }
 
@@ -429,6 +429,7 @@ abstract class Query {
             'meta',
             'create',
             'delete',
+            'builder',
             'metaSettings',
             'metaAliases',
             'metaMappings',
@@ -462,8 +463,8 @@ abstract class Query {
     protected function _meta($features = null, array $options = []) {
         if ($features) {
             $features = join(',', array_map(function($item) {
-                        return '_' . strtolower(trim($item, '_'));
-                    }, is_scalar($features) ? explode(",", $features) : $features));
+                    return '_' . strtolower(trim($item, '_'));
+                }, is_scalar($features) ? explode(",", $features) : $features));
         }
         $options = ['index' => $this->index()] + $options + ($features ? ['feature' => $features] : []);
         $result = $this->client->indices()->get($options);
@@ -509,6 +510,26 @@ abstract class Query {
     protected function _metaWarmers(array $options = []) {
         $result = $this->_meta('_warmers', $options);
         return array_pop($result);
+    }
+
+    /**
+     * Creates a builder for this query
+     * 
+     * @param array $query A query array to start using it
+     * @return AutoQueryBuilder
+     */
+    protected function _builder(array $query = []) {
+        return $this->__builder($query);
+    }
+
+    /**
+     * Creates a builder for this query
+     * 
+     * @param array $query A query array to start using it
+     * @return AutoQueryBuilder
+     */
+    protected function __builder(array $query = []) {
+        return AutoQueryBuilder::makeForQueryInstance($this, $query);
     }
 
 }

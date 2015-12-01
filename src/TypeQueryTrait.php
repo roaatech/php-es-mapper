@@ -112,4 +112,15 @@ trait TypeQueryTrait {
         return Model::makeOfType($source, $this->_fullModelClass(), $this->getClient());
     }
 
+    /**
+     * Overrides the parent class _delete method to pass the correct type
+     * @see Query::_delete for details
+     * 
+     * @param scalar $id
+     * @return array The elastic command result
+     */
+    protected function _delete($id){
+        return parent::_delete($this->type(), $id);
+    }
+
 }

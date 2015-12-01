@@ -618,4 +618,58 @@ class QueryBuilder {
         $this->query["query"]["filtered"][$filtered]["bool"][$bool][] = array_merge_recursive($query, $params);
     }
 
+    /**
+     * Set the from and size (paging) of the results
+     * 
+     * @param integer $size
+     * @param integer $from
+     * @return \ItvisionSy\EsMapper\QueryBuilder
+     */
+    public function page($size, $from = null) {
+        if ($from) {
+            $this->from($from);
+        }
+        if ($size) {
+            $this->size($size);
+        }
+        return $this;
+    }
+
+    /**
+     * Sets the size of the results
+     * 
+     * @param integer $size
+     * @return \ItvisionSy\EsMapper\QueryBuilder
+     */
+    public function size($size) {
+        $this->assertInitiated("size");
+        $this->query['size'] = $size;
+        return $this;
+    }
+
+    /**
+     * Sets the start index of the results
+     * 
+     * @param integer $from
+     * @return \ItvisionSy\EsMapper\QueryBuilder
+     */
+    public function from($from) {
+        $this->assertInitiated("from");
+        $this->query['from'] = $from;
+        return $this;
+    }
+
+    /**
+     * Adds a row query part[s] to the current query.
+     * 
+     * Mainly, it is merging recursivly the $query with the current query
+     * 
+     * @param array $query
+     * @return \ItvisionSy\EsMapper\QueryBuilder
+     */
+    public function raw(array $query) {
+        array_merge_recursive($this->query, $query);
+        return $this;
+    }
+
 }

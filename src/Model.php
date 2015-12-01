@@ -108,7 +108,13 @@ class Model implements IModel, ArrayAccess, Iterator {
     }
 
     public function __get($name) {
-        return $this->offsetExists($name) ? $this->attributes[$name] : (array_key_exists($name, $this->meta) ? $this->meta[$name] : (property_exists($this, $name) ? $this->$name : null));
+        if (substr($name, 0, 1) == '_') {
+            return array_key_exists($name, $this->meta) ? $this->meta[$name] : ($this->offsetExists($name) ? $this->attributes[$name] : (property_exists($this, $name) ? $this->$name : null));
+        } elseif (substr($name, 0, 2) == '__') {
+            return property_exists($this, $name) ? $this->$name : ($this->offsetExists($name) ? $this->attributes[$name] : (array_key_exists($name, $this->meta) ? $this->meta[$name] : null));
+        } else {
+            return $this->offsetExists($name) ? $this->attributes[$name] : (array_key_exists($name, $this->meta) ? $this->meta[$name] : (property_exists($this, $name) ? $this->$name : null));
+        }
     }
 
     public function __set($name, $value) {
@@ -189,7 +195,10 @@ class Model implements IModel, ArrayAccess, Iterator {
      * Return meta data
      * @return array
      */
-    public function getMeta() {
+    public function getMeta($key = null) {
+        if ($key) {
+            return $this->meta[$key];
+        }
         return $this->meta;
     }
 
