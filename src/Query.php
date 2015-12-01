@@ -190,7 +190,7 @@ abstract class Query {
             'index' => $index,
             'type' => $type,
             'body' => $data] + ($id ? ['id' => $id] : []) + $parameters);
-        if ($result['_shards']['failed'] > 0) {
+        if (array_key_exists('_shards', $result) && array_key_exists('failed', $result['_shards']) && $result['_shards']['failed'] > 0) {
             throw new Exception('Failed to create the document. Serialized results: ' + json_encode($result));
         } else {
             $result = $this->__find($result['_index'], $result['_type'], $result['_id']);
