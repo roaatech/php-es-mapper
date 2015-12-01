@@ -43,6 +43,15 @@ Or you can use the dot notation like that:
 $result->fetch('hits.hits.0'); //for any absolute access
 ```
 
+##Accessing document data
+On the model object, you can access the results in many ways:
+ 1. using the object attribute accessor `$object->attribute`
+    - if the attribute starts with underscore (_) then it will try to fetch it first from the meta information, then the attributes, and then from the internal object properties.
+    - if the attribute starts with two underscores (__) then it will try to fetch first from the internal object properties, then attributes, then meta.
+    - if not precedence underscores, then it will try to fetch from the attributes, then meta, then internal object properties.
+ 1. using the `$object->getAttributes()[attribute]`, as the getAttributes() will return the document data as an array (first level only).
+ 1. using the `$object->getAttributes($attribute1, $attribute2, ...) which will return a single (or array) value[s] depending on the requested attributes
+
 ##Creating new documents
 Either way will work:
  1. Use the index query static method

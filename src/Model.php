@@ -108,10 +108,12 @@ class Model implements IModel, ArrayAccess, Iterator {
     }
 
     public function __get($name) {
-        if (substr($name, 0, 1) == '_') {
-            return array_key_exists($name, $this->meta) ? $this->meta[$name] : ($this->offsetExists($name) ? $this->attributes[$name] : (property_exists($this, $name) ? $this->$name : null));
-        } elseif (substr($name, 0, 2) == '__') {
-            return property_exists($this, $name) ? $this->$name : ($this->offsetExists($name) ? $this->attributes[$name] : (array_key_exists($name, $this->meta) ? $this->meta[$name] : null));
+        if (substr($name, 0, 2) == '__') {
+            $tName = substr($name, 1);
+            return property_exists($this, $tName) ? $this->$tName : ($this->offsetExists($name) ? $this->attributes[$name] : (array_key_exists($tName, $this->meta) ? $this->meta[$tName] : null));
+        } elseif (substr($name, 0, 1) == '_') {
+            $tName = substr($name, 1);
+            return array_key_exists($tName, $this->meta) ? $this->meta[$tName] : ($this->offsetExists($name) ? $this->attributes[$name] : (property_exists($this, $tName) ? $this->$tName : null));
         } else {
             return $this->offsetExists($name) ? $this->attributes[$name] : (array_key_exists($name, $this->meta) ? $this->meta[$name] : (property_exists($this, $name) ? $this->$name : null));
         }
@@ -188,7 +190,18 @@ class Model implements IModel, ArrayAccess, Iterator {
      * @return array
      */
     public function getAttributes() {
-        return $this->attributes;
+        $values = func_get_args();
+        if (count($values) === 1) {
+            $result = [];
+            foreach ($values as $value) {
+                $result[$value] = @$this->attributes[$value];
+            }
+            return $result;
+        } elseif (count($values) > 1) {
+            return @$this->attributes[$values[0]];
+        } else {
+            return $this->attributes;
+        }
     }
 
     /**
