@@ -199,6 +199,42 @@ abstract class Query {
     }
 
     /**
+     * Index a new document
+     * 
+     * @param array $data the document data
+     * @param string $type
+     * @param string|number $id
+     * @param array $parameters
+     * @return array
+     */
+    protected function _index(array $data, $type, $id = null, array $parameters = []) {
+        return $this->__index($data, $this->index(), $type, $id, $parameters);
+    }
+
+    /**
+     * Index a new document
+     * 
+     * @param array $data the document data
+     * @param string $index
+     * @param string $type
+     * @param string|number $id
+     * @param array $parameters
+     * @return array
+     */
+    protected function __index(array $data, $index, $type, $id = null, array $parameters = []) {
+        $result = $this->client->index([
+            'index' => $index,
+            'type' => $type,
+            'body' => $data] + ($id ? ['id' => $id] : []) + $parameters);
+        if (array_key_exists('_shards', $result) && array_key_exists('failed', $result['_shards']) && $result['_shards']['failed'] > 0) {
+            throw new Exception('Failed to index the document. Serialized results: ' + json_encode($result));
+        } else {
+            $result = $this->__find($result['_index'], $result['_type'], $result['_id']);
+        }
+        return $result;
+    }
+
+    /**
      * Deletes a document
      * 
      * @param string $type
@@ -428,6 +464,7 @@ abstract class Query {
             'find',
             'meta',
             'create',
+            'index',
             'delete',
             'builder',
             'metaSettings',

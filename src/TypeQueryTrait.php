@@ -68,6 +68,17 @@ trait TypeQueryTrait {
     }
 
     /**
+     * Overrides the parent class _index method to omit the type in parameters.
+     * @see Query::_index for details.
+     * 
+     * @param mixed $id
+     * @return Result|Model[]
+     */
+    protected function _index(array $data, $id = null, array $parameters = []) {
+        return parent::_index($data, $this->type(), $id, $parameters);
+    }
+
+    /**
      * Creates the full model class name
      * 
      * It uses the query::modelClassNamePattern and typequery::modelClassName
