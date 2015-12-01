@@ -50,7 +50,7 @@ On the model object, you can access the results in many ways:
     - if the attribute starts with two underscores (__) then it will try to fetch first from the internal object properties, then attributes, then meta.
     - if not precedence underscores, then it will try to fetch from the attributes, then meta, then internal object properties.
  1. using the `$object->getAttributes()[attribute]`, as the getAttributes() will return the document data as an array (first level only).
- 1. using the `$object->getAttributes($attribute1, $attribute2, ...) which will return a single (or array) value[s] depending on the requested attributes
+ 1. using the `$object->getAttributes($attribute1, $attribute2, ...)` which will return a single (or array) value[s] depending on the requested attributes
 
 ##Creating new documents
 Either way will work:
