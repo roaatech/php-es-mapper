@@ -186,48 +186,15 @@ abstract class Query {
      * @return array
      */
     protected function __create(array $data, $index, $type, $id = null, array $parameters = []) {
-        $result = $this->client->create([
+        $parameters+=["api" => "create"];
+        $api = strtolower($parameters["api"]) == "index" ? "index" : "create";
+        unset($parameters["api"]);
+        $result = $this->client->$api([
             'index' => $index,
             'type' => $type,
             'body' => $data] + ($id ? ['id' => $id] : []) + $parameters);
         if (array_key_exists('_shards', $result) && array_key_exists('failed', $result['_shards']) && $result['_shards']['failed'] > 0) {
             throw new Exception('Failed to create the document. Serialized results: ' + json_encode($result));
-        } else {
-            $result = $this->__find($result['_index'], $result['_type'], $result['_id']);
-        }
-        return $result;
-    }
-
-    /**
-     * Index a new document
-     * 
-     * @param array $data the document data
-     * @param string $type
-     * @param string|number $id
-     * @param array $parameters
-     * @return array
-     */
-    protected function _index(array $data, $type, $id = null, array $parameters = []) {
-        return $this->__index($data, $this->index(), $type, $id, $parameters);
-    }
-
-    /**
-     * Index a new document
-     * 
-     * @param array $data the document data
-     * @param string $index
-     * @param string $type
-     * @param string|number $id
-     * @param array $parameters
-     * @return array
-     */
-    protected function __index(array $data, $index, $type, $id = null, array $parameters = []) {
-        $result = $this->client->index([
-            'index' => $index,
-            'type' => $type,
-            'body' => $data] + ($id ? ['id' => $id] : []) + $parameters);
-        if (array_key_exists('_shards', $result) && array_key_exists('failed', $result['_shards']) && $result['_shards']['failed'] > 0) {
-            throw new Exception('Failed to index the document. Serialized results: ' + json_encode($result));
         } else {
             $result = $this->__find($result['_index'], $result['_type'], $result['_id']);
         }
@@ -464,7 +431,6 @@ abstract class Query {
             'find',
             'meta',
             'create',
-            'index',
             'delete',
             'builder',
             'metaSettings',
