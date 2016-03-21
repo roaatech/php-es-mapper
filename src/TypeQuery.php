@@ -14,6 +14,9 @@
 
 namespace ItvisionSy\EsMapper;
 
+$errorReporting = error_reporting();
+error_reporting(E_ALL & ~(E_NOTICE | E_DEPRECATED | E_STRICT));
+
 /**
  * This class is to narrow generic query class operations to one specific type.
  * 
@@ -28,3 +31,5 @@ abstract class TypeQuery extends Query implements TypeQueryInterface {
 
     use TypeQueryTrait;
 }
+
+error_reporting($errorReporting);
