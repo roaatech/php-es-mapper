@@ -58,7 +58,7 @@ $result = TypeQuery::builder()
 ##Building a query
 
 ###The available ElasticSearch methods
-The query builder allows the main filter/query clauses: `term`, `match`, `wildcard`, `range`, and `prefix`.
+The query builder allows the main filter/query clauses: `term`, `match`, `wildcard`, `regexp`, `range`, and `prefix`.
 Each of these methods can be used against a key, or multiple keys, or a value, or multiple values, giving
 flexible way to build up a really complex queries.
 
