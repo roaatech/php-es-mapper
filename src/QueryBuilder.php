@@ -228,7 +228,7 @@ class QueryBuilder {
             case 'ends with':
             case 'ends':
                 $tool = "wildcard";
-                $suffix = "*";
+                $prefix = "*";
                 $_filter = false;
                 break;
             case '=*':
@@ -259,11 +259,15 @@ class QueryBuilder {
         }
 
         //add prefix/suffix to each element in array values
-        if (($suffix || $prefix) && is_array($value)) {
-            foreach ($value as $index => $singleValue) {
-                if (is_string($singleValue)) {
-                    $value[$index] = $prefix . $singleValue . $suffix;
+        if ($suffix || $prefix) {
+            if (is_array($value)) {
+                foreach ($value as $index => $singleValue) {
+                    if (is_string($singleValue)) {
+                        $value[$index] = $prefix . $singleValue . $suffix;
+                    }
                 }
+            } else {
+                $value = ($prefix? : "") . $value . ($suffix? : "");
             }
         }
 
@@ -722,7 +726,7 @@ class QueryBuilder {
      */
     public function range($key, $operator, $value, $bool, $filter, array $params = []) {
         if (is_array($operator) && !is_array($value) || !is_array($operator) && is_array($value) || is_array($operator) && count($operator) !== count($value)) {
-            throw new \BadMethodCallException();
+            throw new \BadMethodCallException("Operator and value parameters should be both a scalar type or both an array with same number of elements");
         }
         if (is_array($key)) {
             return $this->multiRange($key, $operator, $value, $bool, $filter, $params);
@@ -730,7 +734,7 @@ class QueryBuilder {
         $query = [];
         $operators = (array) $operator;
         $values = (array) $value;
-        foreach ($operators as $index => $value) {
+        foreach ($operators as $index => $operator) {
             $query[$operator] = $values[$index];
         }
         $this->addBool(["range" => [$key => $query]], $bool, $filter, $params);
@@ -957,11 +961,11 @@ class QueryBuilder {
     }
 
     protected function makeFilteredQuery(array $queryQuery, $filter = false) {
-        return $filter ? ["query" => $queryQuery] : [];
+        return $filter ? ["query" => $queryQuery] : $queryQuery;
     }
 
     protected function shouldBeFilter($explicit, $implicit) {
-        return $implicit === true ? true : ($explicit === false ? false : ($explicit || $implicit));
+        return $implicit === true ? true : ($explicit === false ? false : ($explicit || $implicit ? true : $explicit));
     }
 
 }
