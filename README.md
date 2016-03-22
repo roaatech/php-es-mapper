@@ -41,7 +41,6 @@ Methods' parameters are mapped to original elasticsearch methods and parameters 
  * `::query` method is mapped to the [search](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L1002) method, and the $query param will be passed as is after appending the index and type parameters to it.
 
 ###Querying for data
-
 The query class is just a simple interface allows you to send DSL queries, or perform other ElasticSearch requests.
 The `::query()` method for example will expect to receive an assoc-array with a well-formed DSL query.
 

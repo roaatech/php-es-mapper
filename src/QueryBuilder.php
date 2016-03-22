@@ -112,8 +112,8 @@ class QueryBuilder {
      * 
      * @return QueryBuilder|static|self
      */
-    public function emptyQuery() {
-        $this->query = [];
+    public function emptyQuery(array $baseQuery = []) {
+        $this->query = $baseQuery;
         return $this;
     }
 

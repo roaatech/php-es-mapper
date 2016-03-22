@@ -93,3 +93,55 @@ Each of the two methods will start a new subquery, and returns a new query build
 When you are done with the subquery, you can finish it and return to the main query by calling the `->endSubQuery()` method.
 
 For now, the subqueries can only be added to the filter bool clause sections.
+
+##Finish the query
+
+###Get the final query array/JSON
+Once done, call the `->toArray()` or `->toJSON()` to get the final query array or JSON string.
+
+###Empty the query
+You can also empty the query and start a new query. This is handy if you have a main base query and you want to execute it multiple time with some minor changes.
+```PHP
+$baseQuery = [
+    'query'=>[
+        'filtered'=>[
+            'filter'=>[
+                'bool'=>[
+                    //some complex base query
+                ]
+            ]
+        ]
+    ]
+];
+$builder = CustomersTypeQuery::builder($baseQuery);
+$page1 = $builder->page(10,0)->execute();
+$page2 = $builder->emptyQuery($baseQuery)->page(10,10)->execute();
+```
+This is just a sample to show you how the empty query works. You can come up with different use cases and scenarios.
+
+###Execute the query
+If the main query builder is instantiated from within a `TypeQueryInterface` compliant query class, then you can execute the query directly using the `->execute()` method.
+
+This method is going to call the instanciator TypeQuery `query` method passing the final query array as a parameter.
+
+##Sample
+```PHP
+$result = CustomersQuery::builder()                 //all customers
+            ->where('email','@hotmail.com', '*=')   //who have hotmail.com emails
+            ->where(['created','updated'],['today','yesterday'])  //and were active today or yesterday
+            ->orWhere()                                 //starts a subquery
+                ->where('country',['UAE','KSA','TUR'])  //where country is UAE, KSA, or TUR
+                ->where('age', [10,20], '<=>=')         //or the age is between 10 and 20 years
+            ->endSubQuery()                             //ends the sub query to the main query
+            ->rawMustNotFilter([                        //add a raw nested must-not filter
+                'nested'=>[
+                    'path'=>'visits',
+                    'filter'=>[
+                        'term'=>['ip'=>'192.168.0.5']
+                    ]
+                ]
+            ])                                          //where none of their visits from a specific ip
+            ->sort('updated','desc')                    //most recent first
+            ->page(10, 20)                              //10 results starting from 20
+            ->execute();
+```
