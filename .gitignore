@@ -5,3 +5,4 @@ vendor/*
 nbproject
 nbproject/
 nbproject/*
+/src/QueryBuilderTest.php

@@ -145,3 +145,100 @@ $result = CustomersQuery::builder()                 //all customers
             ->page(10, 20)                              //10 results starting from 20
             ->execute();
 ```
+This query will result in the following DSL query:
+```JSON
+{
+   "query":{
+      "filtered":{
+         "query":{
+            "bool":{
+               "must":[
+                  {
+                     "wildcard":{
+                        "email":{
+                           "wildcard":"*@hotmail.com"
+                        }
+                     }
+                  }
+               ]
+            }
+         },
+         "filter":{
+            "bool":{
+               "must":[
+                  {
+                     "or":[
+                        {
+                           "terms":{
+                              "created":{
+                                 "value":[
+                                    "today",
+                                    "yesterday"
+                                 ]
+                              }
+                           }
+                        },
+                        {
+                           "terms":{
+                              "updated":{
+                                 "value":[
+                                    "today",
+                                    "yesterday"
+                                 ]
+                              }
+                           }
+                        }
+                     ]
+                  },
+                  {
+                     "or":[
+                        {
+                           "terms":{
+                              "country":{
+                                 "value":[
+                                    "UAE",
+                                    "KSA",
+                                    "TUR"
+                                 ]
+                              }
+                           }
+                        },
+                        {
+                           "range":{
+                              "age":{
+                                 "gte":10,
+                                 "lte":20
+                              }
+                           }
+                        }
+                     ]
+                  }
+               ],
+               "must_not":[
+                  {
+                     "nested":{
+                        "path":"visits",
+                        "filter":{
+                           "term":{
+                              "ip":"192.168.0.5"
+                           }
+                        }
+                     }
+                  }
+               ]
+            }
+         }
+      }
+   },
+   "sort":[
+      {
+         "":"desc"
+      }
+   ],
+   "from":20,
+   "size":10
+}
+```
+
+## License
+This code is published under [MIT](LICENSE) license.

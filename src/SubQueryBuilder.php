@@ -67,5 +67,9 @@ class SubQueryBuilder extends QueryBuilder {
 
         return $callback($this);
     }
+    
+    protected function shouldBeFilter($explicit, $implicit) {
+        return true;
+    }
 
 }
