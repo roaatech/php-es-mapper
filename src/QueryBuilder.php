@@ -132,7 +132,7 @@ class QueryBuilder {
         if ($override) {
             $this->query['sort'] = [];
         }
-        $this->query['sort'][] = [$key => $direction];
+        $this->query['sort'][] = [$by => $direction];
         return $this;
     }
 
@@ -342,7 +342,7 @@ class QueryBuilder {
     public function wildcards($key, array $values, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($values as $value) {
-            $subQuery->wildcard($key, $value, $bool, $filter, $params);
+            $subQuery->wildcard($key, $value, $bool, true, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -364,7 +364,7 @@ class QueryBuilder {
     public function multiWildcard(array $keys, $value, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($keys as $key) {
-            $subQuery->wildcard($key, $value, $bool, $filter, $params);
+            $subQuery->wildcard($key, $value, $bool, true, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -386,7 +386,7 @@ class QueryBuilder {
     public function multiWildcards(array $keys, array $values, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($keys as $key) {
-            $subQuery->wildcards($key, $values, $bool, $filter, $params);
+            $subQuery->wildcards($key, $values, $bool, true, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -446,7 +446,7 @@ class QueryBuilder {
     public function regexps($key, array $values, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($values as $value) {
-            $subQuery->regexp($key, $value, $bool, $filter, $params);
+            $subQuery->regexp($key, $value, $bool, true, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -468,7 +468,7 @@ class QueryBuilder {
     public function multiRegexp(array $keys, $value, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($keys as $key) {
-            $subQuery->regexp($key, $value, $bool, $filter, $params);
+            $subQuery->regexp($key, $value, $bool, true, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -490,7 +490,7 @@ class QueryBuilder {
     public function multiRegexps(array $keys, array $values, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($keys as $key) {
-            $subQuery->regexps($key, $values, $bool, $filter, $params);
+            $subQuery->regexps($key, $values, $bool, true, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -550,7 +550,7 @@ class QueryBuilder {
     public function prefixs($key, array $values, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($values as $value) {
-            $subQuery->prefix($key, $value, $bool, $filter, $params);
+            $subQuery->prefix($key, $value, $bool, true, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -570,7 +570,7 @@ class QueryBuilder {
     public function multiPrefix(array $keys, $value, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($keys as $key) {
-            $subQuery->prefix($key, $value, $bool, $filter, $params);
+            $subQuery->prefix($key, $value, $bool, true, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -590,7 +590,7 @@ class QueryBuilder {
     public function multiPrefixs(array $keys, array $values, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($keys as $key) {
-            $subQuery->prefixs($key, $values, $bool, $filter, $params);
+            $subQuery->prefixs($key, $values, $bool, true, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -631,7 +631,7 @@ class QueryBuilder {
     public function multiTerm(array $keys, $value, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($keys as $key) {
-            $subQuery->term($key, $value, $bool, $filter, $params);
+            $subQuery->term($key, $value, $bool, true, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -654,7 +654,7 @@ class QueryBuilder {
         if (is_array($value)) {
             return $this->matches($key, $value, $bool, $filter, $params);
         }
-        $this->addBool($this->makeFilteredQuery(["match" => [$key => ["query" => $value]]], $filter), $bool, $filter, $params);
+        $this->addBool($this->makeFilteredQuery(["match" => [$key => ["query" => $value] + $params]], $filter), $bool, $filter);
         return $this;
     }
 
@@ -672,7 +672,7 @@ class QueryBuilder {
     public function matches($key, array $values, $bool, $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($values as $value) {
-            $subQuery->match($key, $value, $bool, $filter, $params);
+            $subQuery->match($key, $value, $bool, true, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -688,7 +688,7 @@ class QueryBuilder {
      * @return QueryBuilder|static|self
      */
     public function multiMatch(array $keys, $value, $bool, $filter = false, array $params = []) {
-        $this->addBool($this->makeFilteredQuery(["multi_match" => ["query" => $value, "fields" => $keys]], $filter), $bool, $filter, $params);
+        $this->addBool($this->makeFilteredQuery(["multi_match" => ["query" => $value, "fields" => $keys] + $params], $filter), $bool, $filter);
         return $this;
     }
 
@@ -706,7 +706,7 @@ class QueryBuilder {
     public function multiMatches(array $keys, array $values, $bool, $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($values as $value) {
-            $subQuery->multiMatch($keys, $value, $bool, $filter, $params);
+            $subQuery->multiMatch($keys, $value, $bool, true, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -757,7 +757,7 @@ class QueryBuilder {
     public function multiRange(array $keys, $operator, $value, $bool, $filter, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($keys as $key) {
-            $subQuery->range($key, $operator, $value, $bool, $filter, $params);
+            $subQuery->range($key, $operator, $value, $bool, true, $params);
         }
         $subQuery->endSubQuery();
         return $this;
