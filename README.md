@@ -1,4 +1,4 @@
-#ElasticSearch Mapper (es-mapper)
+#ElasticSearch PHP ORM and Query Builder (es-mapper)
 This is a simple ORM mapper for ElasticSearch for PHP.
 
 [ElasticSearch DSL query builder for PHP](./query_builder_README.md).

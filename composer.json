@@ -1,6 +1,6 @@
 {
     "name": "itvisionsy/php-es-orm",
-    "description": "A simple PHP ORM for elasticsearch",
+    "description": "An ElasticSearch PHP ORM and Query Builder",
     "replace": {
         "itvisionsy/es-orm": ">=1"
     },
