@@ -1,11 +1,65 @@
 <?php
 
+/**
+ * Copyright (c) 2015, Muhannad Shelleh
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+ * THE SOFTWARE.
+ */
+
 namespace ItvisionSy\EsMapper;
 
 /**
- * Description of QueryBuilder
+ * Elasticsearch DSL query builder
+ * 
+ * The elastic query builder class is an easy way to create complex elastic DSL
+ * queries. It has a fluid interface, as well a smart detection feature to make
+ * building a query an easy task for developers not familier with elastic DSL
+ * terms and rules.
+ * 
+ * Example: 
+ * QueryBuilder::make([$initialQuery]) //initiate a builder with base query
+ *   ->where('name','Elastic')          //term:{name:'Elastic'}
+ *   ->where('version', ['1.6','2.0'])  //terms:{version:['1.6','2.0']}
+ *   ->where(['sdk','client'],'PHP')    //or:[{term:{sdk:'PHP'}},{term:{...}}]
+ *   ->where(['created','updated'],['yesterday','today']) //or:[{terms},{terms}]
+ *   ->toArray();                       //get the final query array
+ * 
+ * It worths to know that the query builder depends on the bool query/filter:
+ *  [
+ *      'query'=>[
+ *          'filtered'=>[
+ *              'filter'=>[
+ *                  'bool'=>[
+ *                      'must'=>[...],
+ *                      'should'=>[...],
+ *                      'must_not'=>[...],
+ *                  ]
+ *              ],
+ *              'query'=>[
+ *                  'bool'=>[
+ *                      'must'=>[...],
+ *                      'should'=>[...],
+ *                      'must_not'=>[...],
+ *                  ]
+ *              ]
+ *          ]
+ *      ]
+ *  ]
  *
- * @author muhannad
+ * @package ItvisionSy\EsMapper
+ * @author Muhannad Shelleh <muhannad.shelleh@itvision-sy.com>
+ * 
+ * @method static|self|QueryBuilder make(array $baseQuery=[])
+ * @method-static static|self|QueryBuilder make(array $baseQuery=[])
+ * 
+ * @see AutoQueryBuilder
+ * 
  */
 class QueryBuilder {
 
@@ -29,39 +83,94 @@ class QueryBuilder {
         return new static($query);
     }
 
+    /**
+     * 
+     * @param array $query The base query to start building on it
+     */
     public function __construct(array $query = []) {
         $this->query = array_merge_recursive($query, []);
     }
 
+    /**
+     * Returns the final DSL query as a PHP assoc array
+     * @return array
+     */
     public function toArray() {
         return $this->query;
     }
 
+    /**
+     * Returns the final DSL query as a JSON string
+     * @return type
+     */
     public function toJSON() {
         return json_encode($this->query);
     }
 
-    public function emptyQuery() {
-        $this->query = [];
+    /**
+     * Resets the query to an empty query.
+     * 
+     * @return QueryBuilder|static|self
+     */
+    public function emptyQuery(array $baseQuery = []) {
+        $this->query = $baseQuery;
         return $this;
     }
 
-    public function sort($by, $directions = "asc", $override = false) {
+    /**
+     * Adds a sort clause to the query
+     * 
+     * @param string $by the key to sort by it
+     * @param string|array $direction the direction of the sort. 
+     *                      Can be an array for extra sort control.
+     * @param boolean $override false by default. if true it will reset the sort
+     *                      first, then add the new sort entry.
+     * @return QueryBuilder|static|self
+     */
+    public function sort($by, $direction = "asc", $override = false) {
         $this->assertInitiated("sort");
         if ($override) {
             $this->query['sort'] = [];
         }
-        $this->query['sort'][] = [$key => $directions];
+        $this->query['sort'][] = [$key => $direction];
         return $this;
     }
 
+    /**
+     * The basic smart method to build queries.
+     * 
+     * It will automatically identify the correct filter/query tool to use, as 
+     * well the correct query part to be used in, depending on the content and
+     * type of the key, value, and comparison parameters.
+     * 
+     * $comparison parameter will define what filter/query tool to use.
+     * 
+     * @param string|string[] $key the key(s) to check
+     * @param string|string[] $value the value(s) to check against
+     * @param string $compare the comparison operator or elastic query/filter tool
+     *                        prefix it with ! to negate or with ? to convert to should
+     * @param boolean $filter false to add as a query, true as a filter
+     * @param array|map $params additional parameters the query/filter can use
+     * @return static|QueryBuilder
+     */
     public function where($key, $value, $compare = "=", $filter = null, $params = []) {
+
+        //identify the bool part must|should|must_not
         $compare = trim($compare);
         $bool = substr($compare, 0, 1) == "!" ? "must_not" : (substr($compare, 0, 1) == "?" ? "should" : "must");
+
+        //get the correct compare value
         if ($bool !== "must") {
             $compare = substr($compare, 1);
         }
+
+        //$suffix and $prefix will be used in regex, wildcard, prefix, and suffix
+        //queries.
         $tool = $suffix = $prefix = null;
+        //$_filter is the real identifier for the filter
+        $_filter = $filter;
+
+        //identify the tool, operator, and part
         switch (strtolower(str_replace("_", " ", $compare))) {
             case '=':
             case 'equals':
@@ -120,7 +229,7 @@ class QueryBuilder {
             case 'ends':
                 $tool = "wildcard";
                 $suffix = "*";
-                $filter = false;
+                $_filter = false;
                 break;
             case '=*':
             case 'starts':
@@ -133,25 +242,23 @@ class QueryBuilder {
             case 'like':
             case 'wildcard':
                 $tool = "wildcard";
-                $filter = false;
+                $_filter = false;
                 break;
             case '**':
             case 'r':
             case 'regexp':
+            case 'regex':
             case 'rx':
                 $tool = "regexp";
                 break;
             case '*':
             case 'match':
                 $tool = "match";
-                $filter = false;
+                $_filter = false;
                 break;
         }
 
-        if ($filter === null) {
-            $filter = true;
-        }
-
+        //add prefix/suffix to each element in array values
         if (($suffix || $prefix) && is_array($value)) {
             foreach ($value as $index => $singleValue) {
                 if (is_string($singleValue)) {
@@ -160,120 +267,293 @@ class QueryBuilder {
             }
         }
 
+        //call the real query builder method
         switch ($tool) {
             case 'match':
-                return $this->match($key, $value, $bool, $params);
+                return $this->match($key, $value, $bool, $this->shouldBeFilter($filter, $_filter), $params);
             case 'regexp':
-                return $this->regexp($key, $value, $bool, $params);
+                return $this->regexp($key, $value, $bool, $this->shouldBeFilter($filter, $_filter), $params);
             case 'term':
-                return $this->term($key, $value, $bool, $filter, $params);
+                return $this->term($key, $value, $bool, $this->shouldBeFilter($filter, $_filter), $params);
             case 'range':
-                return $this->range($key, $operator, $value, $bool, $filter, $params);
+                return $this->range($key, $operator, $value, $bool, $this->shouldBeFilter($filter, $_filter), $params);
             case 'wildcard':
-                return $this->wildcard($key, $value, $bool, $params);
+                return $this->wildcard($key, $value, $bool, $this->shouldBeFilter($filter, $_filter), $params);
             case 'prefix':
-                return $this->prefix($key, $value, $bool, $params);
+                return $this->prefix($key, $value, $bool, $this->shouldBeFilter($filter, $_filter), $params);
         }
     }
 
-    public function wildcard($key, $value, $bool = "must", array $params = []) {
+    /**
+     * Creates a wildcard query part.
+     * 
+     * It will automatically detect the $key and $value types to create the 
+     * required number of clauses, as follows:
+     * 
+     * $key         $value      result
+     * 
+     * single       single      {wildcard:{$key:{wildcard:$value}}}
+     * single       array       or:[wildcard($key, $value[1]), ...]
+     * array        single      or:[wildcard($key[1], $value), ...]
+     * array        array       or:[wildcard($key[1], $value[1]),
+     *                              wildcard($key[1], $value[2]), ...
+     *                              wildcard($key[2], $value[1]), ... ]
+     * 
+     * If $filter is true, it will enclose the wildcard query with `query` 
+     * filter and add it to the DSL query filter section instead the query 
+     * section.
+     * 
+     * @param string|string[] $key the key(s) to wildcard search in.
+     * @param string|string[] $value the value(s) to wildcard search against.
+     * @param string $bool severity of the query/filter. [must]|must_not|should
+     * @param bool $filter if true, DSL query filter section will be used after
+     *                      enclosing in a `query` filter.
+     * @param array $params extra parameters for the query tool
+     * @return QueryBuilder|static|self
+     */
+    public function wildcard($key, $value, $bool = "must", $filter = false, array $params = []) {
         if (is_array($key)) {
-            return $this->multiWildcard($key, $value, $bool, $params);
+            return $this->multiWildcard($key, $value, $bool, $filter, $params);
         }
         if (is_array($value)) {
-            return $this->wildcards($key, $value, $bool, $params);
+            return $this->wildcards($key, $value, $bool, $filter, $params);
         }
-        $this->addBool(["wildcard" => [$key => ["wildcard" => $value]]], $bool, false, $params);
+        $this->addBool($this->makeFilteredQuery(["wildcard" => [$key => ["wildcard" => $value]]], $filter), $bool, $filter, $params);
         return $this;
     }
 
-    public function wildcards($key, array $values, $bool = "must", array $params = []) {
+    /**
+     * Creates wildcard query for each $value grouped by OR clause
+     * 
+     * @see QueryBuilder::wildcard() for more information
+     * 
+     * @param string|string[] $key the key(s) to wildcard search in.
+     * @param string[] $values the value(s) to wildcard search against.
+     * @param string $bool severity of the query/filter. [must]|must_not|should
+     * @param bool $filter if true, DSL query filter section will be used after
+     *                      enclosing in a `query` filter.
+     * @param array $params extra parameters for the query tool
+     * @return QueryBuilder|static|self
+     */
+    public function wildcards($key, array $values, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($values as $value) {
-            $subQuery->wildcard($key, $value, $bool, $params);
-        }
-        $subQuery->endSubQuery();
-        return $this;
-    }
-
-    public function multiWildcard(array $keys, $value, $bool = "must", array $params = []) {
-        $subQuery = $this->orWhere($bool);
-        foreach ($keys as $key) {
-            $subQuery->wildcard($key, $value, $bool, $params);
-        }
-        $subQuery->endSubQuery();
-        return $this;
-    }
-
-    public function multiWildcards(array $keys, array $values, $bool = "must", array $params = []) {
-        $subQuery = $this->orWhere($bool);
-        foreach ($keys as $key) {
-            $subQuery->wildcards($key, $values, $bool, $params);
-        }
-        $subQuery->endSubQuery();
-        return $this;
-    }
-
-    public function regexp($key, $value, $bool = "must", array $params = []) {
-        if (is_array($key)) {
-            return $this->multiRegexp($key, $value, $bool, $params);
-        }
-        if (is_array($value)) {
-            return $this->regexps($key, $value, $bool, $params);
-        }
-        $this->addBool(["regexp" => [$key => ["value" => $value]]], $bool, false, $params);
-        return $this;
-    }
-
-    public function regexps($key, array $values, $bool = "must", array $params = []) {
-        $subQuery = $this->orWhere($bool);
-        foreach ($values as $value) {
-            $subQuery->regexp($key, $value, $bool, $params);
-        }
-        $subQuery->endSubQuery();
-        return $this;
-    }
-
-    public function multiRegexp(array $keys, $value, $bool = "must", array $params = []) {
-        $subQuery = $this->orWhere($bool);
-        foreach ($keys as $key) {
-            $subQuery->regexp($key, $value, $bool, $params);
-        }
-        $subQuery->endSubQuery();
-        return $this;
-    }
-
-    public function multiRegexps(array $keys, array $values, $bool = "must", array $params = []) {
-        $subQuery = $this->orWhere($bool);
-        foreach ($keys as $key) {
-            $subQuery->regexps($key, $values, $bool, $params);
-        }
-        $subQuery->endSubQuery();
-        return $this;
-    }
-
-    public function prefix($key, $value, $bool = "must", array $params = []) {
-        if (is_array($key)) {
-            return $this->multiPrefix($key, $value, $bool, $params);
-        }
-        if (is_array($value)) {
-            return $this->prefixs($key, $value, $bool, $params);
-        }
-        $this->addBool(["prefix" => [$key => $value]], $bool, false, $params);
-        return $this;
-    }
-
-    public function prefixs($key, array $values, $bool = "must", array $params = []) {
-        $subQuery = $this->orWhere($bool);
-        foreach ($values as $value) {
-            $subQuery->prefix($key, $value, $bool, $params);
+            $subQuery->wildcard($key, $value, $bool, $filter, $params);
         }
         $subQuery->endSubQuery();
         return $this;
     }
 
     /**
-     * Creates multiple prefix queries for the list of keys
+     * Creates wildcard query for each $key grouped by OR clause
+     * 
+     * @see QueryBuilder::wildcard() for more information
+     * 
+     * @param string[] $keys the key(s) to wildcard search in.
+     * @param string|string[] $value the value(s) to wildcard search against.
+     * @param string $bool severity of the query/filter. [must]|must_not|should
+     * @param bool $filter if true, DSL query filter section will be used after
+     *                      enclosing in a `query` filter.
+     * @param array $params extra parameters for the query tool
+     * @return QueryBuilder|static|self
+     */
+    public function multiWildcard(array $keys, $value, $bool = "must", $filter = false, array $params = []) {
+        $subQuery = $this->orWhere($bool);
+        foreach ($keys as $key) {
+            $subQuery->wildcard($key, $value, $bool, $filter, $params);
+        }
+        $subQuery->endSubQuery();
+        return $this;
+    }
+
+    /**
+     * Creates wildcard query for each $key/$value pair grouped by OR clause
+     * 
+     * @see QueryBuilder::wildcard() for more information
+     * 
+     * @param string[] $keys the key(s) to wildcard search in.
+     * @param string[] $values the value(s) to wildcard search against.
+     * @param string $bool severity of the query/filter. [must]|must_not|should
+     * @param bool $filter if true, DSL query filter section will be used after
+     *                      enclosing in a `query` filter.
+     * @param array $params extra parameters for the query tool
+     * @return QueryBuilder|static|self
+     */
+    public function multiWildcards(array $keys, array $values, $bool = "must", $filter = false, array $params = []) {
+        $subQuery = $this->orWhere($bool);
+        foreach ($keys as $key) {
+            $subQuery->wildcards($key, $values, $bool, $filter, $params);
+        }
+        $subQuery->endSubQuery();
+        return $this;
+    }
+
+    /**
+     * Creates a regexp query part.
+     * 
+     * It will automatically detect the $key and $value types to create the 
+     * required number of clauses, as follows:
+     * 
+     * $key         $value      result
+     * 
+     * single       single      {regexp:{$key:{regexp:$value}}}
+     * single       array       or:[regexp($key, $value[1]), ...]
+     * array        single      or:[regexp($key[1], $value), ...]
+     * array        array       or:[regexp($key[1], $value[1]),
+     *                              regexp($key[1], $value[2]), ...
+     *                              regexp($key[2], $value[1]), ... ]
+     * 
+     * If $filter is true, it will enclose the regexp query with `query` 
+     * filter and add it to the DSL query filter section instead the query 
+     * section.
+     * 
+     * @param string|string[] $key the key(s) to regexp search in.
+     * @param string|string[] $value the value(s) to regexp search against.
+     * @param string $bool severity of the query/filter. [must]|must_not|should
+     * @param bool $filter if true, DSL query filter section will be used after
+     *                      enclosing in a `query` filter.
+     * @param array $params extra parameters for the query tool
+     * @return QueryBuilder|static|self
+     */
+    public function regexp($key, $value, $bool = "must", $filter = false, array $params = []) {
+        if (is_array($key)) {
+            return $this->multiRegexp($key, $value, $bool, $filter, $params);
+        }
+        if (is_array($value)) {
+            return $this->regexps($key, $value, $bool, $filter, $params);
+        }
+        $this->addBool($this->makeFilteredQuery(["regexp" => [$key => ["value" => $value]]], $filter), $bool, $filter, $params);
+        return $this;
+    }
+
+    /**
+     * Creates regexp query for each $value grouped by OR clause
+     * 
+     * @see QueryBuilder::regexp() for more information
+     * 
+     * @param string|string[] $key the key(s) to regexp search in.
+     * @param string[] $values the value(s) to regexp search against.
+     * @param string $bool severity of the query/filter. [must]|must_not|should
+     * @param bool $filter if true, DSL query filter section will be used after
+     *                      enclosing in a `query` filter.
+     * @param array $params extra parameters for the query tool
+     * @return QueryBuilder|static|self
+     */
+    public function regexps($key, array $values, $bool = "must", $filter = false, array $params = []) {
+        $subQuery = $this->orWhere($bool);
+        foreach ($values as $value) {
+            $subQuery->regexp($key, $value, $bool, $filter, $params);
+        }
+        $subQuery->endSubQuery();
+        return $this;
+    }
+
+    /**
+     * Creates regexp query for each $key grouped by OR clause
+     * 
+     * @see QueryBuilder::regexp() for more information
+     * 
+     * @param string[] $keys the key(s) to regexp search in.
+     * @param string|string[] $value the value(s) to regexp search against.
+     * @param string $bool severity of the query/filter. [must]|must_not|should
+     * @param bool $filter if true, DSL query filter section will be used after
+     *                      enclosing in a `query` filter.
+     * @param array $params extra parameters for the query tool
+     * @return QueryBuilder|static|self
+     */
+    public function multiRegexp(array $keys, $value, $bool = "must", $filter = false, array $params = []) {
+        $subQuery = $this->orWhere($bool);
+        foreach ($keys as $key) {
+            $subQuery->regexp($key, $value, $bool, $filter, $params);
+        }
+        $subQuery->endSubQuery();
+        return $this;
+    }
+
+    /**
+     * Creates regexp query for each $key/$value pair grouped by OR clause
+     * 
+     * @see QueryBuilder::regexp() for more information
+     * 
+     * @param string[] $keys the key(s) to regexp search in.
+     * @param string[] $values the value(s) to regexp search against.
+     * @param string $bool severity of the query/filter. [must]|must_not|should
+     * @param bool $filter if true, DSL query filter section will be used after
+     *                      enclosing in a `query` filter.
+     * @param array $params extra parameters for the query tool
+     * @return QueryBuilder|static|self
+     */
+    public function multiRegexps(array $keys, array $values, $bool = "must", $filter = false, array $params = []) {
+        $subQuery = $this->orWhere($bool);
+        foreach ($keys as $key) {
+            $subQuery->regexps($key, $values, $bool, $filter, $params);
+        }
+        $subQuery->endSubQuery();
+        return $this;
+    }
+
+    /**
+     * Creates a prefix query part.
+     * 
+     * It will automatically detect the $key and $value types to create the 
+     * required number of clauses, as follows:
+     * 
+     * $key         $value      result
+     * 
+     * single       single      {prefix:{$key:{prefix:$value}}}
+     * single       array       or:[prefix($key, $value[1]), ...]
+     * array        single      or:[prefix($key[1], $value), ...]
+     * array        array       or:[prefix($key[1], $value[1]),
+     *                              prefix($key[1], $value[2]), ...
+     *                              prefix($key[2], $value[1]), ... ]
+     * 
+     * If $filter is true, it will enclose the prefix query with `query` 
+     * filter and add it to the DSL query filter section instead the query 
+     * section.
+     * 
+     * @param string|string[] $key the key(s) to prefix search in.
+     * @param string|string[] $value the value(s) to prefix search against.
+     * @param string $bool severity of the query/filter. [must]|must_not|should
+     * @param bool $filter if true, DSL query filter section will be used after
+     *                      enclosing in a `query` filter.
+     * @param array $params extra parameters for the query tool
+     * @return QueryBuilder|static|self
+     */
+    public function prefix($key, $value, $bool = "must", $filter = false, array $params = []) {
+        if (is_array($key)) {
+            return $this->multiPrefix($key, $value, $bool, $filter, $params);
+        }
+        if (is_array($value)) {
+            return $this->prefixs($key, $value, $bool, $filter, $params);
+        }
+        $this->addBool($this->makeFilteredQuery(["prefix" => [$key => $value]], $filter), $bool, $filter, $params);
+        return $this;
+    }
+
+    /**
+     * Creates prefix query for each $value grouped by OR clause
+     * 
+     * @see QueryBuilder::prefix() for more information
+     * 
+     * @param string|string[] $key the key(s) to prefix search in.
+     * @param string[] $values the value(s) to prefix search against.
+     * @param string $bool severity of the query/filter. [must]|must_not|should
+     * @param bool $filter if true, DSL query filter section will be used after
+     *                      enclosing in a `query` filter.
+     * @param array $params extra parameters for the query tool
+     * @return QueryBuilder|static|self
+     */
+    public function prefixs($key, array $values, $bool = "must", $filter = false, array $params = []) {
+        $subQuery = $this->orWhere($bool);
+        foreach ($values as $value) {
+            $subQuery->prefix($key, $value, $bool, $filter, $params);
+        }
+        $subQuery->endSubQuery();
+        return $this;
+    }
+
+    /**
+     * Creates OR-joined multiple prefix queries for the list of keys
      * 
      * Creates a prefix query for the $value for each key in the $keys
      * 
@@ -281,12 +561,12 @@ class QueryBuilder {
      * @param type $value
      * @param type $bool
      * @param array $params
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
-    public function multiPrefix(array $keys, $value, $bool = "must", array $params = []) {
+    public function multiPrefix(array $keys, $value, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($keys as $key) {
-            $subQuery->prefix($key, $value, $bool, $params);
+            $subQuery->prefix($key, $value, $bool, $filter, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -301,26 +581,29 @@ class QueryBuilder {
      * @param array $values
      * @param type $bool
      * @param array $params
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
-    public function multiPrefixs(array $keys, array $values, $bool = "must", array $params = []) {
+    public function multiPrefixs(array $keys, array $values, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($keys as $key) {
-            $subQuery->prefixs($key, $values, $bool, $params);
+            $subQuery->prefixs($key, $values, $bool, $filter, $params);
         }
         $subQuery->endSubQuery();
         return $this;
     }
 
     /**
-     * A normal term query
+     * A normal term/terms query
+     * 
+     * It will automatically use term or terms query depending on the type of 
+     * $value parameter whether it is an array or not.
      * 
      * @param type $key
      * @param type $value
      * @param type $bool
      * @param type $filter
      * @param array $params
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     public function term($key, $value, $bool = "must", $filter = false, array $params = []) {
         if (is_array($key)) {
@@ -339,7 +622,7 @@ class QueryBuilder {
      * @param type $bool
      * @param type $filter
      * @param array $params
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     public function multiTerm(array $keys, $value, $bool = "must", $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
@@ -356,17 +639,18 @@ class QueryBuilder {
      * @param type $key
      * @param type $value
      * @param type $bool
+     * @param boolean $filter
      * @param array $params
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
-    public function match($key, $value, $bool, array $params = []) {
+    public function match($key, $value, $bool, $filter = false, array $params = []) {
         if (is_array($key)) {
-            return $this->multiMatch($key, $value, $bool, $params);
+            return $this->multiMatch($key, $value, $bool, $filter, $params);
         }
         if (is_array($value)) {
-            return $this->matches($key, $value, $bool, $params);
+            return $this->matches($key, $value, $bool, $filter, $params);
         }
-        $this->addBool(["match" => [$key => ["query" => $value]]], $bool, false, $params);
+        $this->addBool($this->makeFilteredQuery(["match" => [$key => ["query" => $value]]], $filter), $bool, $filter, $params);
         return $this;
     }
 
@@ -379,12 +663,12 @@ class QueryBuilder {
      * @param array $values a list of values to create a match query for each
      * @param type $bool
      * @param array $params
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
-    public function matches($key, array $values, $bool, array $params = []) {
+    public function matches($key, array $values, $bool, $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($values as $value) {
-            $subQuery->match($key, $value, $bool, $params);
+            $subQuery->match($key, $value, $bool, $filter, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -397,10 +681,10 @@ class QueryBuilder {
      * @param type $value
      * @param type $bool
      * @param array $params
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
-    public function multiMatch(array $keys, $value, $bool, array $params = []) {
-        $this->addBool(["multi_match" => ["query" => $value, "fields" => $keys]], $bool, false, $params);
+    public function multiMatch(array $keys, $value, $bool, $filter = false, array $params = []) {
+        $this->addBool($this->makeFilteredQuery(["multi_match" => ["query" => $value, "fields" => $keys]], $filter), $bool, $filter, $params);
         return $this;
     }
 
@@ -413,12 +697,12 @@ class QueryBuilder {
      * @param scalar[] $values a list of values to create a multimatch query for
      * @param type $bool
      * @param array $params
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
-    public function multiMatches(array $keys, array $values, $bool, array $params = []) {
+    public function multiMatches(array $keys, array $values, $bool, $filter = false, array $params = []) {
         $subQuery = $this->orWhere($bool);
         foreach ($values as $value) {
-            $subQuery->multiMatch($keys, $value, $bool, $params);
+            $subQuery->multiMatch($keys, $value, $bool, $filter, $params);
         }
         $subQuery->endSubQuery();
         return $this;
@@ -433,7 +717,7 @@ class QueryBuilder {
      * @param string $bool must, should, or must_not
      * @param boolean $filter to use the filter part instead of the query part
      * @param array $params additional query parameters for the range query
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      * @throws \BadMethodCallException
      */
     public function range($key, $operator, $value, $bool, $filter, array $params = []) {
@@ -464,7 +748,7 @@ class QueryBuilder {
      * @param string $bool must, should, or must_not
      * @param boolean $filter to use the filter part instead of the query part
      * @param array $params additional query parameters for the range query
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     public function multiRange(array $keys, $operator, $value, $bool, $filter, array $params = []) {
         $subQuery = $this->orWhere($bool);
@@ -510,7 +794,7 @@ class QueryBuilder {
      * @param array $subQuery
      * @param type $bool
      * @param array $params
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     protected function _endChildSubQuery($tool, array $subQuery, $bool, array $params = []) {
         $this->addBool([$tool => $subQuery], $bool, true, $params);
@@ -538,7 +822,7 @@ class QueryBuilder {
      * Adds a raw must filter part
      * 
      * @param array $query
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     public function rawMustFilter(array $query) {
         $this->addBool($query, "must", true);
@@ -549,7 +833,7 @@ class QueryBuilder {
      * Adds a raw must not filter part
      * 
      * @param array $query
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     public function rawMustNotFilter(array $query) {
         $this->addBool($query, "must_not", true);
@@ -560,7 +844,7 @@ class QueryBuilder {
      * Adds a raw should filter part
      * 
      * @param array $query
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     public function rawShouldFilter(array $query) {
         $this->addBool($query, "should", true);
@@ -570,7 +854,7 @@ class QueryBuilder {
     /**
      * Adds a raw must query part
      * @param array $query
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     public function rawMustQuery(array $query) {
         $this->addBool($query, "must", false);
@@ -581,7 +865,7 @@ class QueryBuilder {
      * Adds a raw must_not query part
      * 
      * @param array $query
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     public function rawMustNotQuery(array $query) {
         $this->addBool($query, "must_not", false);
@@ -592,7 +876,7 @@ class QueryBuilder {
      * Adds a raw bool should query part
      * 
      * @param array $query
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     public function rawShouldQuery(array $query) {
         $this->addBool($query, "should", false);
@@ -623,7 +907,7 @@ class QueryBuilder {
      * 
      * @param integer $size
      * @param integer $from
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     public function page($size, $from = null) {
         if ($from) {
@@ -639,7 +923,7 @@ class QueryBuilder {
      * Sets the size of the results
      * 
      * @param integer $size
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     public function size($size) {
         $this->assertInitiated("size");
@@ -651,7 +935,7 @@ class QueryBuilder {
      * Sets the start index of the results
      * 
      * @param integer $from
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     public function from($from) {
         $this->assertInitiated("from");
@@ -665,11 +949,19 @@ class QueryBuilder {
      * Mainly, it is merging recursivly the $query with the current query
      * 
      * @param array $query
-     * @return \ItvisionSy\EsMapper\QueryBuilder
+     * @return QueryBuilder|static|self
      */
     public function raw(array $query) {
         array_merge_recursive($this->query, $query);
         return $this;
+    }
+
+    protected function makeFilteredQuery(array $queryQuery, $filter = false) {
+        return $filter ? ["query" => $queryQuery] : [];
+    }
+
+    protected function shouldBeFilter($explicit, $implicit) {
+        return $implicit === true ? true : ($explicit === false ? false : ($explicit || $implicit));
     }
 
 }

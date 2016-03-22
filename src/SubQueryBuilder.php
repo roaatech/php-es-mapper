@@ -1,11 +1,29 @@
 <?php
 
+/**
+ * Copyright (c) 2015, Muhannad Shelleh
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+ * THE SOFTWARE.
+ */
+
 namespace ItvisionSy\EsMapper;
 
 /**
- * Description of SubQueryBuilder
+ * An Elasticsearch DSL query builder for nesting queries inside each other.
+ * 
+ * Basically, you will not need to inistantiate it directly. It will be auto-
+ * instantiated and closed from another query builder when it is needed.
  *
- * @author muhannad
+ * @package ItvisionSy\EsMapper
+ * @author Muhannad Shelleh <muhannad.shelleh@itvision-sy.com>
+ * 
+ * @method-static self|static|SubQueryBuilder call(callable $endCallback)
  */
 class SubQueryBuilder extends QueryBuilder {
 
@@ -22,6 +40,11 @@ class SubQueryBuilder extends QueryBuilder {
         }
     }
 
+    /**
+     * 
+     * @param callable $endCallback The callback function to call once the sub
+     *              query builder finishes its work.
+     */
     public function __construct(callable $endCallback) {
         $this->endCallback = $endCallback;
     }
@@ -30,6 +53,15 @@ class SubQueryBuilder extends QueryBuilder {
         $this->query[] = array_merge_recursive($query, $params);
     }
 
+    /**
+     * Finishes the sub query builder context and returns to the original query 
+     * builder context.
+     * 
+     * It will call the provided callable $endCallback function when inistantia-
+     * ted.
+     * 
+     * @return QueryBuilder
+     */
     public function endSubQuery() {
         $callback = $this->endCallback;
 
