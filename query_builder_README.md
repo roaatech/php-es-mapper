@@ -67,6 +67,32 @@ The `::where($key, $value, $compare, $filter)` method is also provided, which wi
 itself to one of the previous available methods. You can use the $compare to tell it what you are looking for,
 and the $filter to enforce a filter or query clause.
 
+Following are the different compare values:
+
+Compare | Result | Sample | Sample means
+--- | --- | --- | ---
+default, =, term, equals | [term query] | ``` $builder->where('name','Muhannad') ``` | name = "Muhannad"
+>, gt | [range query] | ``` $builder->where('age',15,'>') ``` | age > 15
+>=, gte | [range query] | ``` $builder->where('age',15,'>=') ``` | age >= 15
+<, lt | [range query] | ``` $builder->where('age',50,'<') ``` | age < 50
+<=, lte | [range query] | ``` $builder->where('age',50,'<=') ``` | age <= 50
+><, <>, between | [range query] | ``` $builder->where('age',[15,50],'<>') ``` | 15 < age < 50
+>=<=, <=>=, between from to | [range query] | ``` $builder->where('age',[15,50],'<=>=') ``` | 15 <= age <= 50
+>=<, <>=, between from | [range query] | ``` $builder->where('age',[15,50],'<>=') ``` | 15 <= age < 50
+><=, <=>, between to | [range query] | ``` $builder->where('age',[15,50],'<=>') ``` | 15 < age <= 50
+*=, suffix, suffixed, ends with, ends | [wildcard query] | ``` $builder->where('name','nad', '*=') ``` | name = "*nad"
+=*, prefix, prefixed, starts with, starts | [prefix query] | ``` $builder->where('name','Muh', '=*') ``` | name = "Muh*"
+*=*, like, wildcard | [wildcard query] | ``` $builder->where('name','*anna*', 'like') ``` | name = "*anna*"
+**, r, regexp, regex, rx | [regexp query] | ``` $builder->where('wealth', '[1-9]\d{6}', 'regex') ``` | wealth is 7 digits number
+*, match | [match query] | ``` $builder->where('address', 'Dubai UAE', 'match') ``` | address has words 'Dubai' 'UAE'
+
+[term query]: https://www.elastic.co/guide/en/elasticsearch/reference/1.6/query-dsl-term-query.html
+[range query]: https://www.elastic.co/guide/en/elasticsearch/reference/1.6/query-dsl-range-query.html
+[wildcard query]: https://www.elastic.co/guide/en/elasticsearch/reference/1.6/query-dsl-wildcard-query.html
+[prefix query]: https://www.elastic.co/guide/en/elasticsearch/reference/1.6/query-dsl-prefix-query.html
+[regexp query]: https://www.elastic.co/guide/en/elasticsearch/reference/1.6/query-dsl-regexp-query.html
+[match query]: https://www.elastic.co/guide/en/elasticsearch/reference/1.6/query-dsl-match-query.html
+
 ###Sorting
 The `::sort($key, $order)` allows you to add multiple sort levels. 
 
@@ -140,7 +166,7 @@ $result = CustomersQuery::builder()                 //all customers
                         'term'=>['ip'=>'192.168.0.5']
                     ]
                 ]
-            ])                                          //where none of their visits from a specific ip
+            ])                                          //where no visit from a specific ip
             ->sort('updated','desc')                    //most recent first
             ->page(10, 20)                              //10 results starting from 20
             ->execute();
