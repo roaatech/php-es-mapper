@@ -82,8 +82,8 @@ default, =, term, equals | [term query] | ``` $builder->where('name','Muhannad')
 ><=, <=>, between to | [range query] | ``` $builder->where('age',[15,50],'<=>') ``` | 15 < age <= 50
 *=, suffix, suffixed, ends with, ends | [wildcard query] | ``` $builder->where('name','nad', '*=') ``` | name = "*nad"
 =*, prefix, prefixed, starts with, starts | [prefix query] | ``` $builder->where('name','Muh', '=*') ``` | name = "Muh*"
-*=*, like, wildcard | [wildcard query] | ``` $builder->where('name','*anna*', 'like') ``` | name = "*anna*"
-**, r, regexp, regex, rx | [regexp query] | ``` $builder->where('wealth', '[1-9]\d{6}', 'regex') ``` | wealth is 7 digits number
+\*=\*, like, wildcard | [wildcard query] | ``` $builder->where('name','*anna*', 'like') ``` | name = "\*anna\*"
+\*\*, r, regexp, regex, rx | [regexp query] | ``` $builder->where('wealth', '[1-9]\d{6}', 'regex') ``` | wealth is 7 digits number
 *, match | [match query] | ``` $builder->where('address', 'Dubai UAE', 'match') ``` | address has words 'Dubai' 'UAE'
 
 [term query]: https://www.elastic.co/guide/en/elasticsearch/reference/1.6/query-dsl-term-query.html
