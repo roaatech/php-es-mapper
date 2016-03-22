@@ -28,8 +28,17 @@ use Elasticsearch\Client;
  * @author Muhannad Shelleh <muhannad.shelleh@itvision-sy.com>
  * 
  * @method Result query(string $type, array $parameters=[])
+ * @method-static Result query(string $type, array $parameters=[])
+ * @method AutoQueryBuilder builder()
+ * @method-static AutoQueryBuilder builder()
  * @method Result all(string $type)
+ * @method-static Result all(string $type)
  * @method Result find(string $type, int|string|int[]|string $id)
+ * @method-static Result find(string $type, int|string|int[]|string $id)
+ * @method IModel create(array $data, string $index, int|string $id, array $parameters=[])
+ * @method-static IModel create(array $data, string $index, int|string $id, array $parameters=[])
+ * @method array delete(string|string $index, string|string[] $type, int|string $id, array $parameters=[])
+ * @method-static array delete(string|string $index, string|string[] $type, int|string $id, array $parameters=[])
  * @property-read Client $client
  */
 abstract class Query {
@@ -257,7 +266,7 @@ abstract class Query {
         $result = $this->client->search([
             'index' => $index,
             'body' => array_merge_recursive($query, $this->additionalQuery())
-            ] + ($type ? ['type' => $type] : []));
+                ] + ($type ? ['type' => $type] : []));
         return $this->_makeResult($result);
     }
 
@@ -466,8 +475,8 @@ abstract class Query {
     protected function _meta($features = null, array $options = []) {
         if ($features) {
             $features = join(',', array_map(function($item) {
-                    return '_' . strtolower(trim($item, '_'));
-                }, is_scalar($features) ? explode(",", $features) : $features));
+                        return '_' . strtolower(trim($item, '_'));
+                    }, is_scalar($features) ? explode(",", $features) : $features));
         }
         $options = ['index' => $this->index()] + $options + ($features ? ['feature' => $features] : []);
         $result = $this->client->indices()->get($options);

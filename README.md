@@ -1,13 +1,24 @@
 #ElasticSearch Mapper (es-mapper)
-This is a simple ORM mapper for ElasticSearch on PHP.
+This is a simple ORM mapper for ElasticSearch for PHP.
+
+ElasticSearch DSL query builder for PHP.
+
+##Requirements
+ - PHP 5.4+
+ - Elasticsearch PHP SDK v>=1 and <2
+ - ElasticSearch server 1.6. ES2 is not tested, so use with care.
 
 ##Installation
 ###Composer
 ```composer require itvisionsy/php-es-orm```
 
-please note it requires Elasticsearch PHP SDK v>=1 and <2
+###Manual download
+Head to the latest version [here](https://github.com/itvisionsy/php-es-mapper/releases/latest) then download using one download button.
 
 ##How to use?
+
+**For the Query Builder, [read this README instead](./query_biulder_README.md)**
+
 That is simple:
 
 ### Per index query:
@@ -28,6 +39,51 @@ That is simple:
 Methods' parameters are mapped to original elasticsearch methods and parameters as follows:
  * `::find(scalar)` and `::find(scalar[])` methods are mapped to [get](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L167) and [mget](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L671) methods respectively.
  * `::query` method is mapped to the [search](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L1002) method, and the $query param will be passed as is after appending the index and type parameters to it.
+
+###Querying for data
+
+The query class is just a simple interface allows you to send DSL queries, or perform other ElasticSearch requests.
+The `::query()` method for example will expect to receive an assoc-array with a well-formed DSL query.
+
+However, you can use the query builder to builder the query and get a well-formed DSL array out of it. 
+
+You can use a type-query query builder to build the query and execute it directly:
+```PHP
+$result = TypeQuery::builder()
+    ->where('key1','some value')
+    ->where('key2',$intValue,'>')
+    ->where('key3','value','!=')
+    ->where('key4', ['value1','value2'])
+    ->execute();
+//$result is a \ItvisionSy\EsMapper\Result instance
+```
+
+Or you can use a generic query builder to build the query then you can modify it using other tools:
+```PHP
+//init a builder object
+$builder = \ItvisionSy\EsMapper\QueryBuilder::make();
+
+//build the query using different methods
+$query = $builder
+                ->where('key1','some value') //term clause
+                ->where('key2',$intValue,'>') //range clause
+                ->where('key3','value','!=') //must_not term clause
+                ->where('key4', ['value1','value2']) //terms clause
+                ->where('email', '@hotmail.com', '*=') //wildcard search for all @hotmail.com emails
+                ->sort('key1','asc') //first sort option
+                ->sort('key2',['order'=>'asc','mode'=>'avg']) //second sort option
+                ->from(20)->size(20) //results from 20 to 39
+                ->toArray();
+
+//modify the query as you need
+$query['aggs']=['company'=>['terms'=>['field'=>'company']]];
+
+//then execute it against a type query
+$result = TypeQuery::query($query);
+//$result is a \ItvisionSy\EsMapper\Result instance
+```
+
+Please refer to [this file](./query_builder_README.md) for more detailed information.
 
 ##Retrieving results
 The returned result set implements the ArrayAccess interface to access specific document inside the result. i.e.

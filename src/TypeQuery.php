@@ -18,10 +18,12 @@ $errorReporting = error_reporting();
 error_reporting(E_ALL & ~(E_NOTICE | E_DEPRECATED | E_STRICT));
 
 /**
- * This class is to narrow generic query class operations to one specific type.
+ * This class is to narrow down a generic index-level query class operations to 
+ * one specific index type.
  * 
  * All the generic operations in the generic class are applicable here, however,
- * they omit the type parameters by providing it internally.
+ * they omit the type parameter and will pass it internally to the index-level
+ * class methods when called.
  *
  * @package ItvisionSy\EsMapper
  * @author Muhannad Shelleh <muhannad.shelleh@itvision-sy.com>

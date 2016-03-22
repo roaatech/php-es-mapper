@@ -14,10 +14,8 @@
 
 namespace ItvisionSy\EsMapper;
 
-use ArrayAccess;
 use Elasticsearch\Client;
 use Exception;
-use Iterator;
 
 /**
  * A document model class returned from ES find/query methods
@@ -26,7 +24,7 @@ use Iterator;
  * @author Muhannad Shelleh <muhannad.shelleh@itvision-sy.com>
  * 
  */
-class Model implements IModel, ArrayAccess, Iterator {
+class Model implements IModel {
 
     /**
      * The raw hit element array returned from ES
@@ -236,7 +234,7 @@ class Model implements IModel, ArrayAccess, Iterator {
             throw new Exception('Need index, type, and key to update a document');
         }
         if (!$this->esClient) {
-            throw new Exception('Need ElasticSearch client object to ALTER operations');
+            throw new Exception('Need ElasticSearch client object for ALTER operations');
         }
         $params = [
             'index' => $this->meta['index'],
@@ -255,10 +253,10 @@ class Model implements IModel, ArrayAccess, Iterator {
      */
     public function delete(array $parameters = []) {
         if (!$this->canAlter()) {
-            throw new Exception('Need index, type, and key to update a document');
+            throw new Exception('Need index, type, and key to delete a document');
         }
         if (!$this->esClient) {
-            throw new Exception('Need ElasticSearch client object to ALTER operations');
+            throw new Exception('Need ElasticSearch client object for ALTER operations');
         }
         $params = [
             'index' => $this->meta['index'],
