@@ -242,6 +242,8 @@ class QueryBuilder {
             case 'like':
             case 'wildcard':
                 $tool = "wildcard";
+                $prefix = '*';
+                $suffix = '*';
                 $_filter = false;
                 break;
             case '**':
@@ -614,7 +616,7 @@ class QueryBuilder {
             return $this->multiTerm($key, $value, $bool, $filter, $params);
         }
         $tool = "term" . (is_array($value) ? "s" : "");
-        $this->addBool([$tool => [$key => ["value" => $value]]], $bool, $filter, $params);
+        $this->addBool([$tool => [$key => (is_array($value) ? $value : ["value" => $value])]], $bool, $filter, $params);
         return $this;
     }
 
