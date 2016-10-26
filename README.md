@@ -3,6 +3,10 @@ This is a simple ORM mapper for ElasticSearch for PHP.
 
 [ElasticSearch DSL query builder for PHP](./query_builder_README.md).
 
+##Collaborators required
+If you can join me in updating and maintaining this project, please send a message to
+muhannad.shelleh@live.com
+
 ##Requirements
  - PHP 5.4+
  - Elasticsearch PHP SDK v>=1 and <2
