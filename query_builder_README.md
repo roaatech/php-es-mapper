@@ -1,14 +1,14 @@
-#ElasticSearch DSL Query Builder Class
+# ElasticSearch DSL Query Builder Class
 This is a simple Query Builder for ElasticSearch DSL language
 
-##Installation
+## Installation
 It comes with the [php-es-mapper package](http://github.com/itvisionsy/php-es-mapper).
 Read about it [here](./README.md).
 
-##How to use
+## How to use
 There are two ways to instantiate a builder object.
 
-###Generic query builder
+### Generic query builder
 The query builder is not related to a specific TypeQuery class, it helps to build the query array and retrieve it. 
 The built array will be then explicitly sent to some query class for execution.
 ```PHP
@@ -35,7 +35,7 @@ $result = TypeQuery::query($query);
 //$result is a \ItvisionSy\EsMapper\Result instance
 ```
 
-###Auto implicit query builder
+### Auto implicit query builder
 This type is implicitly created using a `TypeQuery::builder()` method.
 
 It acts like the generic query builder, but in addition to everything the generic query builder can do, 
@@ -55,14 +55,14 @@ $result = TypeQuery::builder()
 //$result is a \ItvisionSy\EsMapper\Result instance
 ```
 
-##Building a query
+## Building a query
 
-###The available ElasticSearch methods
+### The available ElasticSearch methods
 The query builder allows the main filter/query clauses: `term`, `match`, `wildcard`, `regexp`, `range`, and `prefix`.
 Each of these methods can be used against a key, or multiple keys, or a value, or multiple values, giving
 flexible way to build up a really complex queries.
 
-###The smart `where` method
+### The smart `where` method
 The `::where($key, $value, $compare, $filter)` method is also provided, which will scan, detect, and convert
 itself to one of the previous available methods. You can use the $compare to tell it what you are looking for,
 and the $filter to enforce a filter or query clause.
@@ -93,7 +93,7 @@ default, =, term, equals | [term query] | ``` $builder->where('name','Muhannad')
 [regexp query]: https://www.elastic.co/guide/en/elasticsearch/reference/1.6/query-dsl-regexp-query.html
 [match query]: https://www.elastic.co/guide/en/elasticsearch/reference/1.6/query-dsl-match-query.html
 
-###Sorting
+### Sorting
 The `::sort($key, $order)` allows you to add multiple sort levels. 
 
 The `$order` parameter can be a simple 'desc' or 'asc' value, or can be an assoc array as per ElasticSearch [sort documentation](https://www.elastic.co/guide/en/elasticsearch/reference/1.6/search-request-sort.html).
@@ -101,16 +101,16 @@ The `$order` parameter can be a simple 'desc' or 'asc' value, or can be an assoc
 The third `$override` parameter allows you to clear the sort section before adding the sort terms.
 
 
-###Pagination
+### Pagination
 You can use `from`, and/or `size` for detailed control, or use the `page($size, $from)` which will make two different calls to each method alone. 
 
-###Extra methods
+### Extra methods
 If you need to add extra clauses, there are several methods which allow you to: 
 `raw`, `rawMustFilter`, `rawMustQuery`, `rawMustNotFilter`, `rawMustNotQuery`, `rawShouldFilter`, and `rawShouldQuery`.
 
 The raw query allows you to add any query/filter clause as an assoc-array to one of the filter/query [bool](https://www.elastic.co/guide/en/elasticsearch/reference/1.6/query-dsl-bool-query.html) clause sections.
 
-###Sub queries
+### Sub queries
 
 Sub queries will be automatically created when needed. However, you can add subqueries using the `andWhere` and/or `orWhere` methods.
 
@@ -120,12 +120,12 @@ When you are done with the subquery, you can finish it and return to the main qu
 
 For now, the subqueries can only be added to the filter bool clause sections.
 
-##Finish the query
+## Finish the query
 
-###Get the final query array/JSON
+### Get the final query array/JSON
 Once done, call the `->toArray()` or `->toJSON()` to get the final query array or JSON string.
 
-###Empty the query
+### Empty the query
 You can also empty the query and start a new query. This is handy if you have a main base query and you want to execute it multiple time with some minor changes.
 ```PHP
 $baseQuery = [
@@ -145,12 +145,12 @@ $page2 = $builder->emptyQuery($baseQuery)->page(10,10)->execute();
 ```
 This is just a sample to show you how the empty query works. You can come up with different use cases and scenarios.
 
-###Execute the query
+### Execute the query
 If the main query builder is instantiated from within a `TypeQueryInterface` compliant query class, then you can execute the query directly using the `->execute()` method.
 
 This method is going to call the instanciator TypeQuery `query` method passing the final query array as a parameter.
 
-##Sample
+## Sample
 ```PHP
 $result = CustomersQuery::builder()                 //all customers
             ->where('email','@hotmail.com', '*=')   //who have hotmail.com emails
