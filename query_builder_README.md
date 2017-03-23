@@ -72,16 +72,16 @@ Following are the different compare values:
 Compare | Result | Sample | Sample means
 --- | --- | --- | ---
 default, =, term, equals | [term query] | ``` $builder->where('name','Muhannad') ``` | name = "Muhannad"
->, gt | [range query] | ``` $builder->where('age',15,'>') ``` | age > 15
->=, gte | [range query] | ``` $builder->where('age',15,'>=') ``` | age >= 15
-<, lt | [range query] | ``` $builder->where('age',50,'<') ``` | age < 50
-<=, lte | [range query] | ``` $builder->where('age',50,'<=') ``` | age <= 50
-><, <>, between | [range query] | ``` $builder->where('age',[15,50],'<>') ``` | 15 < age < 50
->=<=, <=>=, between from to | [range query] | ``` $builder->where('age',[15,50],'<=>=') ``` | 15 <= age <= 50
->=<, <>=, between from | [range query] | ``` $builder->where('age',[15,50],'<>=') ``` | 15 <= age < 50
-><=, <=>, between to | [range query] | ``` $builder->where('age',[15,50],'<=>') ``` | 15 < age <= 50
+\>, gt | [range query] | ``` $builder->where('age',15,'>') ``` | age > 15
+\>=, gte | [range query] | ``` $builder->where('age',15,'>=') ``` | age >= 15
+\<, lt | [range query] | ``` $builder->where('age',50,'<') ``` | age < 50
+\<=, lte | [range query] | ``` $builder->where('age',50,'<=') ``` | age <= 50
+\><, <>, between | [range query] | ``` $builder->where('age',[15,50],'<>') ``` | 15 < age < 50
+\>=<=, <=>=, between from to | [range query] | ``` $builder->where('age',[15,50],'<=>=') ``` | 15 <= age <= 50
+\>=<, <>=, between from | [range query] | ``` $builder->where('age',[15,50],'<>=') ``` | 15 <= age < 50
+\><=, <=>, between to | [range query] | ``` $builder->where('age',[15,50],'<=>') ``` | 15 < age <= 50
 *=, suffix, suffixed, ends with, ends | [wildcard query] | ``` $builder->where('name','nad', '*=') ``` | name = "*nad"
-=*, prefix, prefixed, starts with, starts | [prefix query] | ``` $builder->where('name','Muh', '=*') ``` | name = "Muh*"
+\=\*, prefix, prefixed, starts with, starts | [prefix query] | ``` $builder->where('name','Muh', '=*') ``` | name = "Muh*"
 \*=\*, like, wildcard | [wildcard query] | ``` $builder->where('name','*anna*', 'like') ``` | name = "\*anna\*"
 \*\*, r, regexp, regex, rx | [regexp query] | ``` $builder->where('wealth', '[1-9]\d{6}', 'regex') ``` | wealth is 7 digits number
 *, match | [match query] | ``` $builder->where('address', 'Dubai UAE', 'match') ``` | address has words 'Dubai' 'UAE'
