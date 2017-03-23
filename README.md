@@ -1,25 +1,25 @@
-#ElasticSearch PHP ORM and Query Builder (es-mapper)
+# ElasticSearch PHP ORM and Query Builder (es-mapper)
 This is a simple ORM mapper for ElasticSearch for PHP.
 
 [ElasticSearch DSL query builder for PHP](./query_builder_README.md).
 
-##Collaborators required
+## Collaborators required
 If you can join me in updating and maintaining this project, please send a message to
 muhannad.shelleh@live.com
 
-##Requirements
+## Requirements
  - PHP 5.4+
  - Elasticsearch PHP SDK v>=1 and <2
  - ElasticSearch server 1.6. ES2 is not tested, so use with care.
 
-##Installation
-###Composer
+## Installation
+### Composer
 ```composer require itvisionsy/php-es-orm```
 
-###Manual download
+### Manual download
 Head to the latest version [here](https://github.com/itvisionsy/php-es-mapper/releases/latest) then download using one download button.
 
-##How to use?
+## How to use?
 
 **For the Query Builder, [read this README instead](./query_biulder_README.md)**
 
@@ -41,10 +41,10 @@ That is simple:
 
 #### Please note
 Methods' parameters are mapped to original elasticsearch methods and parameters as follows:
- * `::find(scalar)` and `::find(scalar[])` methods are mapped to [get](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L167) and [mget](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L671) methods respectively.
- * `::query` method is mapped to the [search](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php#L1002) method, and the $query param will be passed as is after appending the index and type parameters to it.
+ * `::find(scalar)` and `::find(scalar[])` methods are mapped to [get](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php# L167) and [mget](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php# L671) methods respectively.
+ * `::query` method is mapped to the [search](https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php# L1002) method, and the $query param will be passed as is after appending the index and type parameters to it.
 
-###Querying for data
+### Querying for data
 The query class is just a simple interface allows you to send DSL queries, or perform other ElasticSearch requests.
 The `::query()` method for example will expect to receive an assoc-array with a well-formed DSL query.
 
@@ -88,7 +88,7 @@ $result = TypeQuery::query($query);
 
 Please refer to [this file](./query_builder_README.md) for more detailed information.
 
-##Retrieving results
+## Retrieving results
 The returned result set implements the ArrayAccess interface to access specific document inside the result. i.e.
 ```PHP
 $result = SomeQuery::all();
@@ -102,7 +102,7 @@ Or you can use the dot notation like that:
 $result->fetch('hits.hits.0'); //for any absolute access
 ```
 
-##Accessing document data
+## Accessing document data
 On the model object, you can access the results in many ways:
  1. using the object attribute accessor `$object->attribute`
     - if the attribute starts with underscore (_) then it will try to fetch it first from the meta information, then the attributes, and then from the internal object properties.
@@ -111,7 +111,7 @@ On the model object, you can access the results in many ways:
  1. using the `$object->getAttributes()[attribute]`, as the getAttributes() will return the document data as an array (first level only).
  1. using the `$object->getAttributes($attribute1, $attribute2, ...)` which will return a single (or array) value[s] depending on the requested attributes
 
-##Creating new documents
+## Creating new documents
 Either way will work:
  1. Use the index query static method
     ```php
@@ -123,7 +123,7 @@ Either way will work:
    TypeQuery::create(array $data, $id=null, array $parameters=[])
    ```
 
-##Updating a document
+## Updating a document
 You can update an already indexed document by:
  1. Either *Re-indexing* a document with the same type and id, OR
  1. Or `update(array $data, array $parameters=[])` method on the model's object:
@@ -132,7 +132,7 @@ You can update an already indexed document by:
    TypeQuery::find(1)->update(['new_key'=>'value','old_key'=>'new value'],[]);
    ```
 
-##Deleting a document
+## Deleting a document
 The same way you can update a document, you can delete it:
  1. Calling the static method `::delete($type, $id)` on the index query
  1. Calling the method `->delete()` on model's object.
@@ -156,7 +156,7 @@ You can extend the Model class easily. Just extend it!
 In case you were using the namespaces, you can set the models namespace in the query class by overriding the modelNamespace public method. This method should return a string ending with \
 After that, you need to call the `->setModelClass($class)` on the query result object.
 
-##Examples
+## Examples
 Please check [tests/](/tests) folder. Basically, the case1.php is the main file.
 
 ```
