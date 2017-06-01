@@ -21,7 +21,7 @@ Head to the latest version [here](https://github.com/itvisionsy/php-es-mapper/re
 
 ## How to use?
 
-**For the Query Builder, [read this README instead](./query_biulder_README.md)**
+**For the Query Builder, [read this README instead](./query_builder_README.md)**
 
 That is simple:
 
